@@ -16,27 +16,48 @@ export default function MathQuizGame() {
   const [showAnimation, setShowAnimation] = useState(false);
   const [timeLimit, setTimeLimit] = useState(60);
   const [showSettings, setShowSettings] = useState(false);
+  const [questionType, setQuestionType] = useState('twoDigit'); // 新增状态变量
+  const [crabs, setCrabs] = useState<number[]>([]); // 新增状态变量
 
   const inputRef = useRef<HTMLInputElement>(null);
 
   const generateQuestion = () => {
-    let num1, num2, operation;
-    do {
-      num1 = Math.floor(Math.random() * 100);
-      num2 = Math.floor(Math.random() * 100);
-      operation = Math.random() < 0.5 ? '+' : '-';
-    } while ((operation === '-' && num2 > num1) || (operation === '+' && num1 + num2 > 100));  // 确保减法结果非负且加法结果不大于100
-
-    const newQuestion = `${num1} ${operation} ${num2}`;
-    setQuestion(newQuestion);
-    setCorrectAnswer(operation === '+' ? num1 + num2 : num1 - num2);
-    setTimeLeft(timeLimit);
-
-    // 如果生成的问题为空，设置一个默认问题
-    if (!newQuestion) {
-      setQuestion('1 + 1');
-      setCorrectAnswer(2);
+    let num1, num2, operation, newQuestion;
+    switch (questionType) {
+      case 'twoDigit':
+        do {
+          num1 = Math.floor(Math.random() * 90) + 10; // 确保num1是10到99之间的数字
+          num2 = Math.floor(Math.random() * 90) + 10; // 确保num2是10到99之间的数字
+          operation = Math.random() < 0.5 ? '+' : '-';
+        } while ((operation === '-' && num2 > num1) || (operation === '+' && num1 + num2 > 100));
+        newQuestion = `${num1} ${operation} ${num2}`;
+        break;
+      case 'anyNumber':
+        num1 = Math.floor(Math.random() * 100);
+        num2 = Math.floor(Math.random() * 100);
+        operation = Math.random() < 0.5 ? '+' : '-';
+        newQuestion = `${num1} ${operation} ${num2}`;
+        break;
+      case 'twoStep':
+        let num3, operation2;
+        do {
+          num1 = Math.floor(Math.random() * 90) + 10;
+          num2 = Math.floor(Math.random() * 90) + 10;
+          num3 = Math.floor(Math.random() * 90) + 10;
+          operation = Math.random() < 0.5 ? '+' : '-';
+          operation2 = Math.random() < 0.5 ? '+' : '-';
+        } while ((operation === '-' && num2 > num1) || (operation === '+' && num1 + num2 > 100) ||
+                 (operation2 === '-' && num3 > (operation === '+' ? num1 + num2 : num1 - num2)) ||
+                 (operation2 === '+' && (operation === '+' ? num1 + num2 : num1 - num2) + num3 > 100) ||
+                 (operation === '+' && num1 + num2 > 100) || (operation2 === '+' && num2 + num3 > 100));
+        newQuestion = `${num1} ${operation} ${num2} ${operation2} ${num3}`;
+        break;
+      default:
+        newQuestion = '1 + 1';
     }
+    setQuestion(newQuestion);
+    setCorrectAnswer(eval(newQuestion.replace(/ /g, '')));
+    setTimeLeft(timeLimit);
   };
 
   useEffect(() => {
@@ -62,6 +83,10 @@ export default function MathQuizGame() {
     }
   }, [timeLeft, gameOver]);
 
+  useEffect(() => {
+    generateQuestion();
+  }, [questionType]);
+
   const handleSubmit = () => {
     const userAnswer = parseInt(answer, 10);
     if (userAnswer === correctAnswer) {
@@ -77,6 +102,7 @@ export default function MathQuizGame() {
         origin: { y: 0.6 }
       });
       document.getElementById('hooraySound')?.play(); // 播放欢呼声
+      setCrabs([...crabs, crabs.length + 1]); // 增加一个小螃蟹
       setTimeout(() => {
         generateQuestion();
         setAnswer('');
@@ -114,17 +140,25 @@ export default function MathQuizGame() {
       handleSubmit();
     }
   };
-  const formatVerticalEquation = (question: string) => {
+  const formatVerticalEquation = (question: string, questionType: string) => {
     if (!question) return null;
-    const [num1, operation, num2] = question.split(' ');
-    const maxLength = Math.max(num1.length, num2.length);
-    const paddedNum1 = num1.padStart(maxLength, ' ');
-    const paddedNum2 = num2.padStart(maxLength, ' ');
+    const parts = question.split(' ');
+    const maxLength = Math.max(...parts.filter((_, i) => i % 2 === 0).map(num => num.length));
+    const formattedParts = parts.map((part, i) => i % 2 === 0 ? part.padStart(maxLength, ' ') : part);
 
     return (
       <div className="vertical-equation" style={{ textAlign: 'right' }}>
-        <div>{paddedNum1}</div>
-        <div>{operation} {paddedNum2}</div>
+        {formattedParts.slice(0, questionType === 'twoStep' ? 4 : 2).map((part, i) => (
+          i === 0 ? (
+            <div key={i}>
+              {part}
+            </div>
+          ) : (i % 2 === 1 ? (
+            <div key={i}>
+              {`${part} ${formattedParts[i + 1]}`}
+            </div>
+          ) : null)
+        ))}
         <div style={{ borderBottom: '2px solid black', width: '100%' }}></div>
       </div>
     );
@@ -160,6 +194,19 @@ export default function MathQuizGame() {
               min="1"
             />
           </div>
+          <div className="mt-4">
+            <label htmlFor="questionType" className="block mb-2">出题方案:</label>
+            <select
+              id="questionType"
+              value={questionType}
+              onChange={(e) => setQuestionType(e.target.value)}
+              className="w-full p-2 border rounded"
+            >
+              <option value="twoDigit">100以内两位数加减法</option>
+              <option value="anyNumber">两位数加减法</option>
+              <option value="twoStep">100以内连续两次两位数加减法</option>
+            </select>
+          </div>
           <button
             onClick={clearHighScore}
             className="mt-4 bg-red-500 text-white p-2 rounded w-full"
@@ -177,7 +224,7 @@ export default function MathQuizGame() {
             <div>倒计时: {timeLeft}秒</div>
           </div>
           <div className="text-2xl font-bold mb-4">
-            {formatVerticalEquation(question)}
+            {formatVerticalEquation(question, questionType)}
           </div>
           <input
             ref={inputRef}
@@ -196,6 +243,14 @@ export default function MathQuizGame() {
           >
             {gameOver ? '重新开始' : '提交'}
           </button>
+
+          <button
+            onClick={generateQuestion}
+            className="w-full p-2 mt-2 rounded bg-yellow-500 text-white hover:bg-yellow-600"
+          >
+            换一题
+          </button>
+
           <ToastContainer />
           <audio id="generalErrorSound" src="/audio/general-error.wav"></audio>
           <audio id="carryOverErrorSound" src="/audio/carry-over-error.mp3"></audio>
@@ -207,6 +262,16 @@ export default function MathQuizGame() {
               </div>
             </div>
           )}
+          <div className="flex flex-wrap mt-4">
+            {crabs.map((_, index) => (
+              <img
+                key={index}
+                src="/images/crab.png"
+                alt="小螃蟹"
+                className="w-12 h-12 animate-bounce"
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>
