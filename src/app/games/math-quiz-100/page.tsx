@@ -101,7 +101,7 @@ export default function MathQuizGame() {
         spread: 70,
         origin: { y: 0.6 }
       });
-      document.getElementById('hooraySound')?.play(); // 播放欢呼声
+      (document.getElementById('hooraySound') as HTMLAudioElement)?.play(); // 播放欢呼声
       setCrabs([...crabs, crabs.length + 1]); // 增加一个小螃蟹
       setTimeout(() => {
         generateQuestion();
@@ -114,10 +114,10 @@ export default function MathQuizGame() {
       setGameOver(true);
       if (Math.abs(userAnswer - correctAnswer) === 10) {
         setShowAnimation(true);
-        document.getElementById('carryOverErrorSound')?.play(); // 播放进位退位错误提示音
+        (document.getElementById('carryOverErrorSound') as HTMLAudioElement)?.play(); // 播放进位退位错误提示音
         setTimeout(() => setShowAnimation(false), 3000);
       } else {
-        document.getElementById('generalErrorSound')?.play(); // 播放一般错误提示音
+        (document.getElementById('generalErrorSound') as HTMLAudioElement)?.play(); // 播放一般错误提示音
       }
       toast.error(`答错了。正确答案是 ${correctAnswer}。重新开始吧！最高分是 ${highScore}。`);
     }
