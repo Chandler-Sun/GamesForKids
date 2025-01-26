@@ -4,7 +4,7 @@ import Link from 'next/link';
 const GamesDirectory = () => {
   const games = [
     { id: 'math-quiz-100', title: '数学练习游戏', description: '练习100以内的加减法' },
-    // 在这里可以添加更多游戏
+    { id: 'chinese-calligraphy', title: '书法练习游戏', description: '练习书法' },
   ];
 
   return (

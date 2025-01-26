@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import './page.module.css';
 
 export default function MathQuizGame() {
   const [score, setScore] = useState(0);

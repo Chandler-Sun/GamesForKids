@@ -1,0 +1,21 @@
+@font-face {
+    font-family: 'Chun Qiu QiuHong';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(/fonts/ChillCalligraphyChunQiu_QiuHong.otf) format('opentype');
+}
+@font-face {
+    font-family: 'Chun Qiu ChenFeng';
+    font-style: normal;
+    font-weight: bold;
+    font-display: swap;
+    src: url(/fonts/ChillCalligraphyChunQiu_ChenFeng.otf) format('opentype');
+}
+@font-face {
+    font-family: 'Long Chang';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(/fonts/ChillLongCangKaiShu_Medium.otf) format('opentype');
+}
