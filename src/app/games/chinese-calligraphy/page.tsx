@@ -141,7 +141,7 @@ const ChineseCalligraphy = () => {
 
   // 将文本分割成句子
   const sentences = React.useMemo(() => {
-    return text.split('\n').filter(s => s.trim());
+    return text.split('\n').filter((s: string) => s.trim());
   }, [text]);
 
   // 处理文本变化
@@ -720,7 +720,7 @@ const ChineseCalligraphy = () => {
             {renderTemplate()}
             
             {/* 更新文字渲染 */}
-            {sentences.map((sentence, index) => {
+            {sentences.map((sentence: string, index: number) => {
               const pos = getTextPosition(index, sentences.length);
               return (
                 <text 
