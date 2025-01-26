@@ -37,54 +37,63 @@ const ChineseCalligraphy = () => {
     `${['一','二','三','四','五','六','七','八','九','十','十一','十二'][new Date().getMonth()]}月${['一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','二十一','二十二','二十三','二十四','二十五','二十六','二十七','二十八','二十九','三十','三十一'][new Date().getDate()-1]}日`,
   ];
 
-  // 从 localStorage 加载保存的设置或使用默认值
+  // 添加检查浏览器环境的函数
+  const getLocalStorage = (key: string, defaultValue: any) => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(key);
+      return stored !== null ? stored : defaultValue;
+    }
+    return defaultValue;
+  };
+
+  // 修改所有使用 localStorage 的状态初始化
   const [text, setText] = React.useState(() => 
-    localStorage.getItem('calligraphy_text') || "取法于上，仅得为中。\n取法于中，故为其下。"
+    getLocalStorage('calligraphy_text', "取法于上，仅得为中。\n取法于中，故为其下。")
   );
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [fontData, setFontData] = React.useState<{[key: string]: string}>({});
   
   const [selectedFont, setSelectedFont] = React.useState(() =>
-    localStorage.getItem('calligraphy_font') || 'Chun Qiu ChenFeng'
+    getLocalStorage('calligraphy_font', 'Chun Qiu ChenFeng')
   );
   const [textColor, setTextColor] = React.useState(() =>
-    localStorage.getItem('calligraphy_textColor') || '#333333'
+    getLocalStorage('calligraphy_textColor', '#333333')
   );
   const [bgColor, setBackgroundColor] = React.useState(() =>
-    localStorage.getItem('calligraphy_bgColor') || '#ffffff'
+    getLocalStorage('calligraphy_bgColor', '#ffffff')
   );
   const [textSize, setTextSize] = React.useState(() =>
-    parseInt(localStorage.getItem('calligraphy_textSize') || '30')
+    parseInt(getLocalStorage('calligraphy_textSize', '30'))
   );
   const [spacing, setSpacing] = React.useState(() =>
-    parseInt(localStorage.getItem('calligraphy_spacing') || '60')
+    parseInt(getLocalStorage('calligraphy_spacing', '60'))
   );
   const [letterSpacing, setLetterSpacing] = React.useState(() =>
-    parseFloat(localStorage.getItem('calligraphy_letterSpacing') || '-0.25')
+    parseFloat(getLocalStorage('calligraphy_letterSpacing', '-0.25'))
   );
   const [alignment, setAlignment] = React.useState<'left' | 'center' | 'right'>(() =>
-    (localStorage.getItem('calligraphy_alignment') as 'left' | 'center' | 'right') || 'center'
+    getLocalStorage('calligraphy_alignment', 'center') as 'left' | 'center' | 'right'
   );
   const [direction, setDirection] = React.useState<'vertical' | 'horizontal'>(() =>
-    (localStorage.getItem('calligraphy_direction') as 'vertical' | 'horizontal') || 'vertical'
+    getLocalStorage('calligraphy_direction', 'vertical') as 'vertical' | 'horizontal'
   );
   const [template, setTemplate] = React.useState<'simple' | 'cloud' | 'mountain' | 'bamboo'>(() =>
-    (localStorage.getItem('calligraphy_template') as 'simple' | 'cloud' | 'mountain' | 'bamboo') || 'simple'
+    getLocalStorage('calligraphy_template', 'simple') as 'simple' | 'cloud' | 'mountain' | 'bamboo'
   );
-
-  // 添加落款相关状态
   const [showSignature, setShowSignature] = React.useState(() =>
-    localStorage.getItem('calligraphy_showSignature') === 'true'
+    getLocalStorage('calligraphy_showSignature', 'false') === 'true'
   );
   const [signatureText, setSignatureText] = React.useState(() =>
-    localStorage.getItem('calligraphy_signatureText') || '某日偶感'
+    getLocalStorage('calligraphy_signatureText', '某日偶感')
   );
   const [signatureSize, setSignatureSize] = React.useState(() =>
-    parseInt(localStorage.getItem('calligraphy_signatureSize') || '16')
+    parseInt(getLocalStorage('calligraphy_signatureSize', '16'))
   );
 
-  // 添加保存设置的 Effect
+  // 修改保存设置的 Effect
   React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     localStorage.setItem('calligraphy_text', text);
     localStorage.setItem('calligraphy_font', selectedFont);
     localStorage.setItem('calligraphy_textColor', textColor);
