@@ -16,33 +16,86 @@ const loadFont = async (url: string): Promise<string> => {
 };
 
 const ChineseCalligraphy = () => {
-  // 添加文本状态
-  const [text, setText] = React.useState("取法于上，仅得为中。\n取法于中，故为其下。");
+  // 添加预设的颜色主题
+  const colorThemes = [
+    { name: '经典黑白', text: '#000000', bg: '#ffffff' },
+    { name: '宣纸淡雅', text: '#2c1810', bg: '#f5e6d3' },
+    { name: '青花瓷韵', text: '#1a4c8a', bg: '#ffffff' },
+    { name: '朱砂典雅', text: '#bc2f32', bg: '#f8f0e5' },
+    { name: '墨韵青灰', text: '#2f2f2f', bg: '#e6eef0' },
+  ];
 
-  // 添加预览状态
+  // 添加预设的落款文字选项
+  const signatureTexts = [
+    '今日偶感',
+    '茶余饭后',
+    '今日小记',
+    '今日小结',
+    `${['一','二','三','四','五','六','七','八','九','十','十一','十二'][new Date().getMonth()]}月${['一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','二十一','二十二','二十三','二十四','二十五','二十六','二十七','二十八','二十九','三十','三十一'][new Date().getDate()-1]}日`,
+  ];
+
+  // 从 localStorage 加载保存的设置或使用默认值
+  const [text, setText] = React.useState(() => 
+    localStorage.getItem('calligraphy_text') || "取法于上，仅得为中。\n取法于中，故为其下。"
+  );
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
-
-  // 添加字体状态
   const [fontData, setFontData] = React.useState<{[key: string]: string}>({});
   
-  // 添加新的状态
-  const [selectedFont, setSelectedFont] = React.useState('Chun Qiu ChenFeng');
-  const [textColor, setTextColor] = React.useState('#333333');
-  const [bgColor, setBackgroundColor] = React.useState('#ffffff');
-  const [textSize, setTextSize] = React.useState(30);
-  const [spacing, setSpacing] = React.useState(60);
+  const [selectedFont, setSelectedFont] = React.useState(() =>
+    localStorage.getItem('calligraphy_font') || 'Chun Qiu ChenFeng'
+  );
+  const [textColor, setTextColor] = React.useState(() =>
+    localStorage.getItem('calligraphy_textColor') || '#333333'
+  );
+  const [bgColor, setBackgroundColor] = React.useState(() =>
+    localStorage.getItem('calligraphy_bgColor') || '#ffffff'
+  );
+  const [textSize, setTextSize] = React.useState(() =>
+    parseInt(localStorage.getItem('calligraphy_textSize') || '30')
+  );
+  const [spacing, setSpacing] = React.useState(() =>
+    parseInt(localStorage.getItem('calligraphy_spacing') || '60')
+  );
+  const [letterSpacing, setLetterSpacing] = React.useState(() =>
+    parseFloat(localStorage.getItem('calligraphy_letterSpacing') || '-0.25')
+  );
+  const [alignment, setAlignment] = React.useState<'left' | 'center' | 'right'>(() =>
+    (localStorage.getItem('calligraphy_alignment') as 'left' | 'center' | 'right') || 'center'
+  );
+  const [direction, setDirection] = React.useState<'vertical' | 'horizontal'>(() =>
+    (localStorage.getItem('calligraphy_direction') as 'vertical' | 'horizontal') || 'vertical'
+  );
+  const [template, setTemplate] = React.useState<'simple' | 'cloud' | 'mountain' | 'bamboo'>(() =>
+    (localStorage.getItem('calligraphy_template') as 'simple' | 'cloud' | 'mountain' | 'bamboo') || 'simple'
+  );
 
-  // 添加字间距状态
-  const [letterSpacing, setLetterSpacing] = React.useState(-0.25);
+  // 添加落款相关状态
+  const [showSignature, setShowSignature] = React.useState(() =>
+    localStorage.getItem('calligraphy_showSignature') === 'true'
+  );
+  const [signatureText, setSignatureText] = React.useState(() =>
+    localStorage.getItem('calligraphy_signatureText') || '某日偶感'
+  );
+  const [signatureSize, setSignatureSize] = React.useState(() =>
+    parseInt(localStorage.getItem('calligraphy_signatureSize') || '16')
+  );
 
-  // 添加对齐方式状态
-  const [alignment, setAlignment] = React.useState<'left' | 'center' | 'right'>('center');
-
-  // 添加文字方向状态
-  const [direction, setDirection] = React.useState<'vertical' | 'horizontal'>('vertical');
-
-  // 添加模版状态
-  const [template, setTemplate] = React.useState<'simple' | 'cloud' | 'mountain' | 'bamboo'>('simple');
+  // 添加保存设置的 Effect
+  React.useEffect(() => {
+    localStorage.setItem('calligraphy_text', text);
+    localStorage.setItem('calligraphy_font', selectedFont);
+    localStorage.setItem('calligraphy_textColor', textColor);
+    localStorage.setItem('calligraphy_bgColor', bgColor);
+    localStorage.setItem('calligraphy_textSize', textSize.toString());
+    localStorage.setItem('calligraphy_spacing', spacing.toString());
+    localStorage.setItem('calligraphy_letterSpacing', letterSpacing.toString());
+    localStorage.setItem('calligraphy_alignment', alignment);
+    localStorage.setItem('calligraphy_direction', direction);
+    localStorage.setItem('calligraphy_template', template);
+    localStorage.setItem('calligraphy_showSignature', showSignature.toString());
+    localStorage.setItem('calligraphy_signatureText', signatureText);
+    localStorage.setItem('calligraphy_signatureSize', signatureSize.toString());
+  }, [text, selectedFont, textColor, bgColor, textSize, spacing, letterSpacing, alignment, direction, template, showSignature, signatureText, signatureSize]);
 
   // 获取 SVG 尺寸
   const svgDimensions = React.useMemo(() => {
@@ -221,14 +274,14 @@ const ChineseCalligraphy = () => {
     }
   };
 
-  // 修改导出图片功能
-  const handleExport = () => {
+  // 修改导出功能为打印功能
+  const handlePrint = () => {
     const svg = document.getElementById('calligraphy');
     if (!svg) return;
 
     // 获取SVG的实际尺寸
-    const width = svg.clientWidth * 2;  // 使用2倍尺寸以获得更清晰的图像
-    const height = svg.clientHeight * 2;
+    const width = svg.clientWidth * 4;  // 使用2倍尺寸以获得更清晰的图像
+    const height = svg.clientHeight * 4;
 
     const svgData = `
       <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
@@ -239,8 +292,12 @@ const ChineseCalligraphy = () => {
               src: url('${data}') format('opentype');
             }
           `).join('\n')}
+          @media print {
+            body { margin: 0; }
+            svg { page-break-inside: avoid; }
+          }
         </style>
-        <g transform="scale(2)">
+        <g transform="scale(4)">
           ${svg.innerHTML}
         </g>
       </svg>
@@ -262,19 +319,51 @@ const ChineseCalligraphy = () => {
     img.src = url;
   };
 
-  // 添加确认导出功能
-  const handleConfirmExport = () => {
+  // 修改确认导出为确认打印
+  const handleConfirmPrint = () => {
     if (!previewUrl) return;
     
-    const link = document.createElement('a');
-    link.download = '书法作品.png';
-    link.href = previewUrl;
-    link.click();
-    setPreviewUrl(null);
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>书法作品打印预览</title>
+            <style>
+              body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+              img { max-width: 100%; height: auto; }
+              @media print {
+                body { margin: 0; }
+                img { page-break-inside: avoid; }
+              }
+            </style>
+          </head>
+          <body>
+            <img src="${previewUrl}" />
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+        setPreviewUrl(null);
+      }, 250);
+    }
+  };
+
+  // 添加主题切换函数
+  const handleThemeChange = (theme: { text: string; bg: string }) => {
+    setTextColor(theme.text);
+    setBackgroundColor(theme.bg);
   };
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
+        <nav className="fixed top-0 left-0 w-full p-4 flex justify-between items-center mb-16">
+        <a href="/" className="text-lg font-bold">返回首页</a>
+      </nav>
       <div className="flex gap-8">
         <div className="w-80 space-y-4">
           {/* 添加控制面板 */}
@@ -313,6 +402,38 @@ const ChineseCalligraphy = () => {
                 onChange={(e) => setBackgroundColor(e.target.value)}
                 className="block w-full h-8 mt-1"
               />
+            </div>
+          </div>
+          
+          {/* 添加颜色主题选择器 */}
+          <div className="space-y-2">
+            <label className="text-sm text-gray-600">快捷配色</label>
+            <div className="grid grid-cols-2 gap-2">
+              {colorThemes.map((theme) => (
+                <button
+                  key={theme.name}
+                  onClick={() => handleThemeChange(theme)}
+                  className="flex items-center gap-2 p-2 rounded-lg border border-gray-200 hover:bg-gray-50"
+                >
+                  <div className="flex-shrink-0 w-6 h-6 rounded border border-gray-200 overflow-hidden">
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '50%',
+                        backgroundColor: theme.text
+                      }}
+                    />
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '50%',
+                        backgroundColor: theme.bg
+                      }}
+                    />
+                  </div>
+                  <span className="text-sm">{theme.name}</span>
+                </button>
+              ))}
             </div>
           </div>
           
@@ -462,6 +583,45 @@ const ChineseCalligraphy = () => {
               </button>
             </div>
           </div>
+
+          {/* 添加落款控制 */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600">显示落款</label>
+              <input
+                type="checkbox"
+                checked={showSignature}
+                onChange={(e) => setShowSignature(e.target.checked)}
+                className="rounded"
+              />
+            </div>
+            
+            {showSignature && (
+              <>
+                <select
+                  value={signatureText}
+                  onChange={(e) => setSignatureText(e.target.value)}
+                  className="w-full p-2 rounded-lg border border-gray-200"
+                >
+                  {signatureTexts.map((text) => (
+                    <option key={text} value={text}>{text}</option>
+                  ))}
+                </select>
+                
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-600">落款字号: {signatureSize}px</label>
+                  <input
+                    type="range"
+                    min="12"
+                    max="24"
+                    value={signatureSize}
+                    onChange={(e) => setSignatureSize(Number(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* 更新 SVG 展示区域 */}
@@ -506,13 +666,31 @@ const ChineseCalligraphy = () => {
                 </text>
               );
             })}
+
+            {showSignature && (
+              <text
+                x={direction === 'vertical' ? 60 : svgDimensions.width - 60}
+                y={direction === 'vertical' ? svgDimensions.height - 100 : svgDimensions.height - 60}
+                style={{
+                  fontSize: `${signatureSize}px`,
+                  fontFamily: `"${selectedFont}", cursive`,
+                  fill: textColor,
+                  opacity: 0.85,
+                  writingMode: direction === 'vertical' ? 'vertical-rl' : 'horizontal-tb',
+                  textAnchor: direction === 'vertical' ? 'start' : 'end',
+                  dominantBaseline: 'auto'
+                }}
+              >
+                {signatureText}
+              </text>
+            )}
           </svg>
-          {/* 修改导出按钮文字 */}
+          {/* 修改按钮文字 */}
             <button
-                onClick={handleExport}
+                onClick={handlePrint}
                 className="mt-6 px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors duration-200 shadow-md"
             >
-                预览并导出
+                预览并打印
             </button>
         </div>
       </div>
@@ -541,10 +719,10 @@ const ChineseCalligraphy = () => {
                 取消
               </button>
               <button
-                onClick={handleConfirmExport}
+                onClick={handleConfirmPrint}
                 className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors duration-200"
               >
-                确认导出
+                确认打印
               </button>
             </div>
           </div>
