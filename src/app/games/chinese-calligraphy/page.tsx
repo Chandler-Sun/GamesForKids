@@ -23,6 +23,9 @@ const ChineseCalligraphy = () => {
     { name: '青花瓷韵', text: '#1a4c8a', bg: '#ffffff' },
     { name: '朱砂典雅', text: '#bc2f32', bg: '#f8f0e5' },
     { name: '墨韵青灰', text: '#2f2f2f', bg: '#e6eef0' },
+    { name: '翠竹清新', text: '#2d5a27', bg: '#f0f7e6' },
+    { name: '紫气东来', text: '#4b0082', bg: '#f8f4ff' },
+    { name: '金石典藏', text: '#8b4513', bg: '#faf0e6' },
   ];
 
   // 添加预设的落款文字选项
@@ -172,21 +175,50 @@ const ChineseCalligraphy = () => {
       case 'cloud':
         return (
           <>
+            {/* 左下角的云纹 */}
             <path
-              d="M20,40 Q40,20 60,40 Q80,60 100,40"
-              fill="none"
+              d="M20,40 Q40,20 60,40 T100,40 T140,40"
+              fill="none" 
               stroke={textColor}
               strokeWidth="1.5"
               strokeOpacity="0.2"
               transform={`translate(0,${svgDimensions.height - 80})`}
             />
             <path
-              d="M20,40 Q40,20 60,40 Q80,60 100,40"
+              d="M30,50 Q50,30 70,50 T110,50 T150,50" 
               fill="none"
               stroke={textColor}
               strokeWidth="1.5"
               strokeOpacity="0.2"
-              transform="translate(200,20)"
+              transform={`translate(0,${svgDimensions.height - 90})`}
+            />
+
+            {/* 右上角的云纹 */}
+            <path
+              d="M20,40 Q40,20 60,40 T100,40 T140,40"
+              fill="none"
+              stroke={textColor}
+              strokeWidth="1.5"
+              strokeOpacity="0.2"
+              transform="translate(160,20)"
+            />
+            <path
+              d="M30,50 Q50,30 70,50 T110,50 T150,50"
+              fill="none"
+              stroke={textColor}
+              strokeWidth="1.5"
+              strokeOpacity="0.2"
+              transform="translate(160,10)"
+            />
+
+            {/* 中间装饰性的小云纹 */}
+            <path
+              d="M20,40 Q35,25 50,40 T80,40"
+              fill="none"
+              stroke={textColor}
+              strokeWidth="1"
+              strokeOpacity="0.15"
+              transform="translate(100,200) scale(0.7)"
             />
           </>
         );
@@ -194,21 +226,53 @@ const ChineseCalligraphy = () => {
       case 'mountain':
         return (
           <>
+            {/* 远山 */}
             <path
-              d="M30,40 L60,10 L90,40 L120,10 L150,40"
+              d="M20,40 C30,35 40,20 60,25 C80,30 90,40 110,35 C130,30 140,20 160,30"
               fill="none"
-              stroke={textColor}
-              strokeWidth="1.5"
-              strokeOpacity="0.2"
-              transform={`translate(0,${svgDimensions.height - 50})`}
+              stroke={textColor} 
+              strokeWidth="1"
+              strokeOpacity="0.1"
+              transform="translate(120,20) scale(0.8)"
             />
+            
+            {/* 近山 */}
             <path
-              d="M30,10 L60,40 L90,10 L120,40 L150,10"
+              d="M10,50 C30,30 50,45 70,25 C90,5 110,30 130,20 C150,10 170,30 190,25"
               fill="none"
               stroke={textColor}
               strokeWidth="1.5"
               strokeOpacity="0.2"
-              transform="translate(100,20)"
+              transform={`translate(-10,${svgDimensions.height - 60})`}
+            />
+
+            {/* 瀑布 */}
+            <path
+              d="M100,20 C95,40 105,60 100,80 C95,100 105,120 100,140"
+              fill="none"
+              stroke={textColor}
+              strokeWidth="1"
+              strokeOpacity="0.15"
+              transform="translate(140,40)"
+            />
+
+            {/* 树木 */}
+            <path
+              d="M0,0 C5,-10 15,-10 20,0 M10,-5 L10,10"
+              fill="none"
+              stroke={textColor}
+              strokeWidth="1"
+              strokeOpacity="0.2"
+              transform="translate(40,100) scale(0.8)"
+            />
+            
+            <path
+              d="M0,0 C5,-10 15,-10 20,0 M10,-5 L10,10"
+              fill="none"
+              stroke={textColor}
+              strokeWidth="1"
+              strokeOpacity="0.2"
+              transform="translate(240,80) scale(0.6)"
             />
           </>
         );
@@ -361,11 +425,12 @@ const ChineseCalligraphy = () => {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
-        <nav className="fixed top-0 left-0 w-full p-4 flex justify-between items-center mb-16">
+      <nav className="fixed top-0 left-0 w-full p-4 flex justify-between items-center mb-16">
         <a href="/" className="text-lg font-bold">返回首页</a>
       </nav>
-      <div className="flex gap-8">
-        <div className="w-80 space-y-4">
+      <div className="flex gap-8 h-[calc(100vh-120px)] mt-16">
+        {/* 左侧控制面板 - 添加独立滚动 */}
+        <div className="w-80 overflow-y-auto pr-4 space-y-4">
           {/* 添加控制面板 */}
           <div className="space-y-2"></div>
           <textarea
@@ -624,8 +689,8 @@ const ChineseCalligraphy = () => {
           </div>
         </div>
 
-        {/* 更新 SVG 展示区域 */}
-        <div className="flex flex-col items-center">
+        {/* 右侧预览区域 - 固定在中间 */}
+        <div className="flex flex-col items-center justify-center sticky top-0 h-fit">
           <svg 
             id="calligraphy"
             width={svgDimensions.width} 
@@ -685,13 +750,12 @@ const ChineseCalligraphy = () => {
               </text>
             )}
           </svg>
-          {/* 修改按钮文字 */}
-            <button
-                onClick={handlePrint}
-                className="mt-6 px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors duration-200 shadow-md"
-            >
-                预览并打印
-            </button>
+          <button
+            onClick={handlePrint}
+            className="mt-6 px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors duration-200 shadow-md"
+          >
+            预览并打印
+          </button>
         </div>
       </div>
 
