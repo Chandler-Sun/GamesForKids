@@ -19,3 +19,10 @@
     font-display: swap;
     src: url(/fonts/ChillLongCangKaiShu_Bold.otf) format('opentype');
 }
+@font-face {
+    font-family: 'KingHwa_OldSong';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(/fonts/KingHwa_OldSong.ttf) format('truetype');
+}

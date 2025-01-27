@@ -16,6 +16,14 @@ const loadFont = async (url: string): Promise<string> => {
 };
 
 const ChineseCalligraphy = () => {
+  // 添加状态来追踪组件是否已经挂载
+  const [isClient, setIsClient] = React.useState(false);
+
+  // 在组件挂载后设置 isClient 为 true
+  React.useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // 添加预设的颜色主题
   const colorThemes = [
     { name: '经典黑白', text: '#000000', bg: '#ffffff' },
@@ -40,85 +48,57 @@ const ChineseCalligraphy = () => {
     `${['一','二','三','四','五','六','七','八','九','十','十一','十二'][new Date().getMonth()]}月${['一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','二十一','二十二','二十三','二十四','二十五','二十六','二十七','二十八','二十九','三十','三十一'][new Date().getDate()-1]}日`,
   ];
 
-  // 添加检查浏览器环境的函数
+  // 修改检查浏览器环境的函数
   const getLocalStorage = (key: string, defaultValue: any) => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(key);
-      return stored !== null ? stored : defaultValue;
+    if (typeof window === 'undefined') {
+      return defaultValue;  // 服务端渲染时始终返回默认值
     }
-    return defaultValue;
+    try {
+      const stored = localStorage.getItem(key);
+      return stored !== null ? JSON.parse(stored) : defaultValue;
+    } catch {
+      return defaultValue;
+    }
   };
 
-  // 修改所有使用 localStorage 的状态初始化
-  const [text, setText] = React.useState(() => 
-    getLocalStorage('calligraphy_text', "取法于上，仅得为中。\n取法于中，故为其下。")
-  );
+  // 修改所有使用 localStorage 的状态初始化，使用普通值作为初始状态
+  const [text, setText] = React.useState("取法于上，仅得为中。\n取法于中，故为其下。");
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
-  const [fontData, setFontData] = React.useState<{[key: string]: string}>({});
-  
-  const [selectedFont, setSelectedFont] = React.useState(() =>
-    getLocalStorage('calligraphy_font', 'Chun Qiu ChenFeng')
-  );
-  const [textColor, setTextColor] = React.useState(() =>
-    getLocalStorage('calligraphy_textColor', '#333333')
-  );
-  const [bgColor, setBackgroundColor] = React.useState(() =>
-    getLocalStorage('calligraphy_bgColor', '#ffffff')
-  );
-  const [textSize, setTextSize] = React.useState(() =>
-    parseInt(getLocalStorage('calligraphy_textSize', '30'))
-  );
-  const [spacing, setSpacing] = React.useState(() =>
-    parseInt(getLocalStorage('calligraphy_spacing', '60'))
-  );
-  const [letterSpacing, setLetterSpacing] = React.useState(() =>
-    parseFloat(getLocalStorage('calligraphy_letterSpacing', '-0.25'))
-  );
-  const [alignment, setAlignment] = React.useState<'left' | 'center' | 'right'>(() =>
-    getLocalStorage('calligraphy_alignment', 'center') as 'left' | 'center' | 'right'
-  );
-  const [direction, setDirection] = React.useState<'vertical' | 'horizontal'>(() =>
-    getLocalStorage('calligraphy_direction', 'vertical') as 'vertical' | 'horizontal'
-  );
-  const [template, setTemplate] = React.useState<'simple' | 'cloud' | 'mountain' | 'bamboo' | 'newyear'>(() =>
-    getLocalStorage('calligraphy_template', 'simple') as 'simple' | 'cloud' | 'mountain' | 'bamboo' | 'newyear'
-  );
-  const [showSignature, setShowSignature] = React.useState(() =>
-    getLocalStorage('calligraphy_showSignature', 'false') === 'true'
-  );
-  const [signatureText, setSignatureText] = React.useState(() =>
-    getLocalStorage('calligraphy_signatureText', '某日偶感')
-  );
-  const [signatureSize, setSignatureSize] = React.useState(() =>
-    parseInt(getLocalStorage('calligraphy_signatureSize', '16'))
-  );
-  const [signatureOffsetX, setSignatureOffsetX] = React.useState(() =>
-    parseInt(getLocalStorage('calligraphy_signatureOffsetX', '0'))
-  );
-  const [signatureOffsetY, setSignatureOffsetY] = React.useState(() =>
-    parseInt(getLocalStorage('calligraphy_signatureOffsetY', '0'))
-  );
+  const [selectedFont, setSelectedFont] = React.useState('Chun Qiu ChenFeng');
+  const [textColor, setTextColor] = React.useState('#333333');
+  const [bgColor, setBackgroundColor] = React.useState('#ffffff');
+  const [textSize, setTextSize] = React.useState(30);
+  const [spacing, setSpacing] = React.useState(60);
+  const [letterSpacing, setLetterSpacing] = React.useState(-0.25);
+  const [alignment, setAlignment] = React.useState<'left' | 'center' | 'right'>('center');
+  const [direction, setDirection] = React.useState<'vertical' | 'horizontal'>('vertical');
+  const [template, setTemplate] = React.useState<'simple' | 'cloud' | 'mountain' | 'bamboo' | 'newyear'>('simple');
+  const [showSignature, setShowSignature] = React.useState(false);
+  const [signatureText, setSignatureText] = React.useState('今日偶感');
+  const [signatureSize, setSignatureSize] = React.useState(16);
+  const [signatureOffsetX, setSignatureOffsetX] = React.useState(0);
+  const [signatureOffsetY, setSignatureOffsetY] = React.useState(0);
 
-  // 修改保存设置的 Effect
+  // 在组件挂载后从 localStorage 加载数据
   React.useEffect(() => {
-    if (typeof window === 'undefined') return;
-    
-    localStorage.setItem('calligraphy_text', text);
-    localStorage.setItem('calligraphy_font', selectedFont);
-    localStorage.setItem('calligraphy_textColor', textColor);
-    localStorage.setItem('calligraphy_bgColor', bgColor);
-    localStorage.setItem('calligraphy_textSize', textSize.toString());
-    localStorage.setItem('calligraphy_spacing', spacing.toString());
-    localStorage.setItem('calligraphy_letterSpacing', letterSpacing.toString());
-    localStorage.setItem('calligraphy_alignment', alignment);
-    localStorage.setItem('calligraphy_direction', direction);
-    localStorage.setItem('calligraphy_template', template);
-    localStorage.setItem('calligraphy_showSignature', showSignature.toString());
-    localStorage.setItem('calligraphy_signatureText', signatureText);
-    localStorage.setItem('calligraphy_signatureSize', signatureSize.toString());
-    localStorage.setItem('calligraphy_signatureOffsetX', signatureOffsetX.toString());
-    localStorage.setItem('calligraphy_signatureOffsetY', signatureOffsetY.toString());
-  }, [text, selectedFont, textColor, bgColor, textSize, spacing, letterSpacing, alignment, direction, template, showSignature, signatureText, signatureSize, signatureOffsetX, signatureOffsetY]);
+    if (typeof window !== 'undefined') {
+      setText(getLocalStorage('calligraphy_text', text));
+      setSelectedFont(getLocalStorage('calligraphy_font', selectedFont));
+      setTextColor(getLocalStorage('calligraphy_textColor', textColor));
+      setBackgroundColor(getLocalStorage('calligraphy_bgColor', bgColor));
+      setTextSize(parseInt(getLocalStorage('calligraphy_textSize', textSize)));
+      setSpacing(getLocalStorage('calligraphy_spacing', spacing));
+      setLetterSpacing(parseFloat(getLocalStorage('calligraphy_letterSpacing', letterSpacing)));
+      setAlignment(getLocalStorage('calligraphy_alignment', alignment));
+      setDirection(getLocalStorage('calligraphy_direction', direction));
+      setTemplate(getLocalStorage('calligraphy_template', template));
+      setShowSignature(getLocalStorage('calligraphy_showSignature', 'false') === 'true');
+      setSignatureText(getLocalStorage('calligraphy_signatureText', signatureText));
+      setSignatureSize(parseInt(getLocalStorage('calligraphy_signatureSize', signatureSize)));
+      setSignatureOffsetX(parseInt(getLocalStorage('calligraphy_signatureOffsetX', signatureOffsetX)));
+      setSignatureOffsetY(parseInt(getLocalStorage('calligraphy_signatureOffsetY', signatureOffsetY)));
+    }
+  }, []);
 
   // 获取 SVG 尺寸
   const svgDimensions = React.useMemo(() => {
@@ -134,14 +114,14 @@ const ChineseCalligraphy = () => {
         const fonts = {
           'Chun Qiu QiuHong': '/fonts/ChillCalligraphyChunQiu_QiuHong.otf',
           'Chun Qiu ChenFeng': '/fonts/ChillCalligraphyChunQiu_ChenFeng.otf',
-          'Long Chang': '/fonts/ChillLongCangKaiShu_Medium.otf'
+          'Long Chang': '/fonts/ChillLongCangKaiShu_Medium.otf',
+          'KingHwa_OldSong': '/fonts/KingHwa_OldSong.ttf'
         };
         
         const loadedFonts: {[key: string]: string} = {};
         for (const [name, path] of Object.entries(fonts)) {
           loadedFonts[name] = await loadFont(path);
         }
-        setFontData(loadedFonts);
       } catch (error) {
         console.error('加载字体失败:', error);
       }
@@ -458,6 +438,13 @@ const ChineseCalligraphy = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // 只在客户端渲染时显示内容
+  if (!isClient) {
+    return <div className="min-h-screen flex items-center justify-center">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-gray-900"></div>
+    </div>;
+  }
+
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
       <nav className="fixed top-0 left-0 w-full p-4 flex justify-between items-center mb-16 z-10">
@@ -504,6 +491,7 @@ const ChineseCalligraphy = () => {
             <option value="Chun Qiu ChenFeng">乘风</option>
             <option value="Chun Qiu QiuHong">秋鸿</option>
             <option value="Long Chang">龙藏</option>
+            <option value="KingHwa_OldSong">京華老宋体</option>
           </select>
           
           <div className="flex gap-4">
