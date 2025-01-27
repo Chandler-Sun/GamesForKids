@@ -6,17 +6,17 @@ import React from 'react';
 const FONTS = [
   {
     id: 'Chun Qiu ChenFeng',
-    name: '乘风',
+    name: '寒蝉书体 春秋',
     path: '/fonts/ChillCalligraphyChunQiu_ChenFeng.otf'
   },
   {
     id: 'Chun Qiu QiuHong',
-    name: '秋鸿',
+    name: '寒蝉书体 秋鸿',
     path: '/fonts/ChillCalligraphyChunQiu_QiuHong.otf'
   },
   {
     id: 'Long Chang',
-    name: '龙藏',
+    name: '寒蝉龙藏 楷书',
     path: '/fonts/ChillLongCangKaiShu_Medium.otf'
   },
   {
@@ -672,86 +672,9 @@ const ChineseCalligraphy = () => {
             placeholder="请输入书法文本..."
             className="w-full h-28 p-3 rounded-lg border border-gray-200 resize-none"
           />
-          <select
-            value={selectedFont}
-            onChange={(e) => setSelectedFont(e.target.value)}
-            className="w-full p-2 rounded-lg border border-gray-200"
-          >
-            {FONTS.map(font => (
-              <option key={font.id} value={font.id}>
-                {font.name}
-              </option>
-            ))}
-          </select>
-          
-          <div className="flex gap-4">
-            <div>
-              <label className="text-sm text-gray-600">文字颜色</label>
-              <input
-                type="color"
-                value={textColor}
-                onChange={(e) => setTextColor(e.target.value)}
-                className="block w-full h-8 mt-1"
-              />
-            </div>
-            <div>
-              <label className="text-sm text-gray-600">背景颜色</label>
-              <input
-                type="color"
-                value={bgColor}
-                onChange={(e) => setBackgroundColor(e.target.value)}
-                className="block w-full h-8 mt-1"
-              />
-            </div>
-          </div>
-          
-          {/* 添加颜色主题选择器 */}
-          <div className="space-y-2">
-            <label className="text-sm text-gray-600">快捷配色</label>
-            <div className="grid grid-cols-2 gap-2">
-              {colorThemes.map((theme) => {
-                // 判断当前主题是否被选中
-                const isSelected = theme.text === textColor && theme.bg === bgColor;
-                
-                return (
-                  <button
-                    key={theme.name}
-                    onClick={() => handleThemeChange(theme)}
-                    className={`
-                      flex items-center gap-2 p-2 rounded-lg 
-                      ${isSelected 
-                        ? 'border border-blue-500 bg-blue-50' 
-                        : 'border border-gray-200 hover:bg-gray-50'
-                      }
-                      transition-all duration-200
-                    `}
-                  >
-                    <div className="flex-shrink-0 w-6 h-6 rounded border border-gray-200 overflow-hidden">
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '50%',
-                          backgroundColor: theme.text
-                        }}
-                      />
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '50%',
-                          backgroundColor: theme.bg
-                        }}
-                      />
-                    </div>
-                    <span className={`text-sm ${isSelected ? 'font-medium text-blue-600' : ''}`}>
-                      {theme.name}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-          
-          <div className="space-y-2">
+
+
+<div className="space-y-2">
             <label className="text-sm text-gray-600">字体大小: {textSize}px</label>
             <input
               type="range"
@@ -788,115 +711,18 @@ const ChineseCalligraphy = () => {
             />
           </div>
           
-          <div className="space-y-2">
-            <label className="text-sm text-gray-600">排版对齐</label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setAlignment('left')}
-                className={`flex-1 py-2 px-4 rounded-lg ${
-                  alignment === 'left' 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-100 text-gray-700'
-                }`}
-              >
-                {direction === 'vertical' ? '靠左': '靠上'}
-              </button>
-              <button
-                onClick={() => setAlignment('center')}
-                className={`flex-1 py-2 px-4 rounded-lg ${
-                  alignment === 'center' 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-100 text-gray-700'
-                }`}
-              >
-                居中
-              </button>
-              <button
-                onClick={() => setAlignment('right')}
-                className={`flex-1 py-2 px-4 rounded-lg ${
-                  alignment === 'right' 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-100 text-gray-700'
-                }`}
-              >
-                {direction === 'vertical' ? '靠右' : '靠下'}
-              </button>
-            </div>
-          </div>
-
-          {/* 添加文字方向控制 */}
-          <div className="space-y-2">
-            <label className="text-sm text-gray-600">文字方向</label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setDirection('vertical')}
-                className={`flex-1 py-2 px-4 rounded-lg ${
-                  direction === 'vertical' 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-100 text-gray-700'
-                }`}
-              >
-                竖排
-              </button>
-              <button
-                onClick={() => setDirection('horizontal')}
-                className={`flex-1 py-2 px-4 rounded-lg ${
-                  direction === 'horizontal' 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-100 text-gray-700'
-                }`}
-              >
-                横排
-              </button>
-            </div>
-          </div>
-
-          {/* 添加模版选择器 */}
-          <div className="space-y-2">
-            <label className="text-sm text-gray-600">边框样式</label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setTemplate('simple')}
-                className={`py-2 px-4 rounded-lg ${
-                  template === 'simple' 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-100 text-gray-700'
-                }`}
-              >
-                简约
-              </button>
-              <button
-                onClick={() => setTemplate('cloud')}
-                className={`py-2 px-4 rounded-lg ${
-                  template === 'cloud' 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-100 text-gray-700'
-                }`}
-              >
-                云纹
-              </button>
-              <button
-                onClick={() => setTemplate('mountain')}
-                className={`py-2 px-4 rounded-lg ${
-                  template === 'mountain' 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-100 text-gray-700'
-                }`}
-              >
-                山水
-              </button>
-              <button
-                onClick={() => setTemplate('bamboo')}
-                className={`py-2 px-4 rounded-lg ${
-                  template === 'bamboo' 
-                    ? 'bg-blue-500 text-white' 
-                    : 'bg-gray-100 text-gray-700'
-                }`}
-              >
-                竹简
-              </button>
-            </div>
-          </div>
+          <select
+            value={selectedFont}
+            onChange={(e) => setSelectedFont(e.target.value)}
+            className="w-full p-2 rounded-lg border border-gray-200"
+          >
+            {FONTS.map(font => (
+              <option key={font.id} value={font.id}>
+                {font.name}
+              </option>
+            ))}
+          </select>
+          
 
 
           {/* 在控制面板中添加称谓控制，放在落款控制之前 */}
@@ -1028,6 +854,182 @@ const ChineseCalligraphy = () => {
                 </div>
               </>
             )}
+          </div>
+          <div className="flex gap-4">
+            <div>
+              <label className="text-sm text-gray-600">文字颜色</label>
+              <input
+                type="color"
+                value={textColor}
+                onChange={(e) => setTextColor(e.target.value)}
+                className="block w-full h-8 mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-gray-600">背景颜色</label>
+              <input
+                type="color"
+                value={bgColor}
+                onChange={(e) => setBackgroundColor(e.target.value)}
+                className="block w-full h-8 mt-1"
+              />
+            </div>
+          </div>
+          
+          {/* 添加颜色主题选择器 */}
+          <div className="space-y-2">
+            <label className="text-sm text-gray-600">快捷配色</label>
+            <div className="grid grid-cols-2 gap-2">
+              {colorThemes.map((theme) => {
+                // 判断当前主题是否被选中
+                const isSelected = theme.text === textColor && theme.bg === bgColor;
+                
+                return (
+                  <button
+                    key={theme.name}
+                    onClick={() => handleThemeChange(theme)}
+                    className={`
+                      flex items-center gap-2 p-2 rounded-lg 
+                      ${isSelected 
+                        ? 'border border-blue-500 bg-blue-50' 
+                        : 'border border-gray-200 hover:bg-gray-50'
+                      }
+                      transition-all duration-200
+                    `}
+                  >
+                    <div className="flex-shrink-0 w-6 h-6 rounded border border-gray-200 overflow-hidden">
+                      <div
+                        style={{
+                          width: '100%',
+                          height: '50%',
+                          backgroundColor: theme.text
+                        }}
+                      />
+                      <div
+                        style={{
+                          width: '100%',
+                          height: '50%',
+                          backgroundColor: theme.bg
+                        }}
+                      />
+                    </div>
+                    <span className={`text-sm ${isSelected ? 'font-medium text-blue-600' : ''}`}>
+                      {theme.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="text-sm text-gray-600">排版对齐</label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setAlignment('left')}
+                className={`flex-1 py-2 px-4 rounded-lg ${
+                  alignment === 'left' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                {direction === 'vertical' ? '靠左': '靠上'}
+              </button>
+              <button
+                onClick={() => setAlignment('center')}
+                className={`flex-1 py-2 px-4 rounded-lg ${
+                  alignment === 'center' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                居中
+              </button>
+              <button
+                onClick={() => setAlignment('right')}
+                className={`flex-1 py-2 px-4 rounded-lg ${
+                  alignment === 'right' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                {direction === 'vertical' ? '靠右' : '靠下'}
+              </button>
+            </div>
+          </div>
+
+          {/* 添加文字方向控制 */}
+          <div className="space-y-2">
+            <label className="text-sm text-gray-600">文字方向</label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setDirection('vertical')}
+                className={`flex-1 py-2 px-4 rounded-lg ${
+                  direction === 'vertical' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                竖排
+              </button>
+              <button
+                onClick={() => setDirection('horizontal')}
+                className={`flex-1 py-2 px-4 rounded-lg ${
+                  direction === 'horizontal' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                横排
+              </button>
+            </div>
+          </div>
+
+          {/* 添加模版选择器 */}
+          <div className="space-y-2">
+            <label className="text-sm text-gray-600">边框样式</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => setTemplate('simple')}
+                className={`py-2 px-4 rounded-lg ${
+                  template === 'simple' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                简约
+              </button>
+              <button
+                onClick={() => setTemplate('cloud')}
+                className={`py-2 px-4 rounded-lg ${
+                  template === 'cloud' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                云纹
+              </button>
+              <button
+                onClick={() => setTemplate('mountain')}
+                className={`py-2 px-4 rounded-lg ${
+                  template === 'mountain' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                山水
+              </button>
+              <button
+                onClick={() => setTemplate('bamboo')}
+                className={`py-2 px-4 rounded-lg ${
+                  template === 'bamboo' 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-100 text-gray-700'
+                }`}
+              >
+                竹简
+              </button>
+            </div>
           </div>
         </div>
 
