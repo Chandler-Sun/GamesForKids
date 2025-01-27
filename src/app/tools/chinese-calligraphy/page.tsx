@@ -317,7 +317,7 @@ const ChineseCalligraphy = () => {
               stroke={textColor} 
               strokeWidth="1"
               strokeOpacity="0.1"
-              transform="translate(120,20) scale(0.8)"
+              transform={`translate(${svgDimensions.width - 160},20) scale(0.8)`}
             />
             
             {/* 近山 */}
@@ -337,7 +337,16 @@ const ChineseCalligraphy = () => {
               stroke={textColor}
               strokeWidth="1"
               strokeOpacity="0.15"
-              transform="translate(140,40)"
+              transform={`translate(${svgDimensions.width - 140},40)`}
+            />
+
+<path
+              d="M100,20 C95,40 105,60 100,80 C95,100 105,120 100,140"
+              fill="none"
+              stroke={textColor}
+              strokeWidth="1"
+              strokeOpacity="0.15"
+              transform={`translate(${svgDimensions.width - 110},40) scale(0.8)`}
             />
 
             {/* 树木 */}
@@ -356,7 +365,7 @@ const ChineseCalligraphy = () => {
               stroke={textColor}
               strokeWidth="1"
               strokeOpacity="0.2"
-              transform="translate(240,80) scale(0.6)"
+              transform={`translate(${svgDimensions.width - 90},70) scale(0.6)`}
             />
           </>
         );
