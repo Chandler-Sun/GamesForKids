@@ -26,6 +26,8 @@ const ChineseCalligraphy = () => {
     { name: '翠竹清新', text: '#2d5a27', bg: '#f0f7e6' },
     { name: '紫气东来', text: '#4b0082', bg: '#f8f4ff' },
     { name: '金石典藏', text: '#8b4513', bg: '#faf0e6' },
+    { name: '新年喜庆', text: '#d4000f', bg: '#fff1f0' },
+    { name: '赛博朋克', text: '#00ff9f', bg: '#1a1a2e' },
   ];
 
   // 添加预设的落款文字选项
@@ -34,6 +36,7 @@ const ChineseCalligraphy = () => {
     '茶余饭后',
     '今日小记',
     '今日小结',
+    `农历${['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'][Math.floor((new Date().getFullYear() - 4) % 10)]}${['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'][Math.floor((new Date().getFullYear() - 4) % 12)]}年`,
     `${['一','二','三','四','五','六','七','八','九','十','十一','十二'][new Date().getMonth()]}月${['一','二','三','四','五','六','七','八','九','十','十一','十二','十三','十四','十五','十六','十七','十八','十九','二十','二十一','二十二','二十三','二十四','二十五','二十六','二十七','二十八','二十九','三十','三十一'][new Date().getDate()-1]}日`,
   ];
 
@@ -77,8 +80,8 @@ const ChineseCalligraphy = () => {
   const [direction, setDirection] = React.useState<'vertical' | 'horizontal'>(() =>
     getLocalStorage('calligraphy_direction', 'vertical') as 'vertical' | 'horizontal'
   );
-  const [template, setTemplate] = React.useState<'simple' | 'cloud' | 'mountain' | 'bamboo'>(() =>
-    getLocalStorage('calligraphy_template', 'simple') as 'simple' | 'cloud' | 'mountain' | 'bamboo'
+  const [template, setTemplate] = React.useState<'simple' | 'cloud' | 'mountain' | 'bamboo' | 'newyear'>(() =>
+    getLocalStorage('calligraphy_template', 'simple') as 'simple' | 'cloud' | 'mountain' | 'bamboo' | 'newyear'
   );
   const [showSignature, setShowSignature] = React.useState(() =>
     getLocalStorage('calligraphy_showSignature', 'false') === 'true'
@@ -88,6 +91,12 @@ const ChineseCalligraphy = () => {
   );
   const [signatureSize, setSignatureSize] = React.useState(() =>
     parseInt(getLocalStorage('calligraphy_signatureSize', '16'))
+  );
+  const [signatureOffsetX, setSignatureOffsetX] = React.useState(() =>
+    parseInt(getLocalStorage('calligraphy_signatureOffsetX', '0'))
+  );
+  const [signatureOffsetY, setSignatureOffsetY] = React.useState(() =>
+    parseInt(getLocalStorage('calligraphy_signatureOffsetY', '0'))
   );
 
   // 修改保存设置的 Effect
@@ -107,7 +116,9 @@ const ChineseCalligraphy = () => {
     localStorage.setItem('calligraphy_showSignature', showSignature.toString());
     localStorage.setItem('calligraphy_signatureText', signatureText);
     localStorage.setItem('calligraphy_signatureSize', signatureSize.toString());
-  }, [text, selectedFont, textColor, bgColor, textSize, spacing, letterSpacing, alignment, direction, template, showSignature, signatureText, signatureSize]);
+    localStorage.setItem('calligraphy_signatureOffsetX', signatureOffsetX.toString());
+    localStorage.setItem('calligraphy_signatureOffsetY', signatureOffsetY.toString());
+  }, [text, selectedFont, textColor, bgColor, textSize, spacing, letterSpacing, alignment, direction, template, showSignature, signatureText, signatureSize, signatureOffsetX, signatureOffsetY]);
 
   // 获取 SVG 尺寸
   const svgDimensions = React.useMemo(() => {
@@ -324,7 +335,7 @@ const ChineseCalligraphy = () => {
             ))}
           </>
         );
-      
+
       default: // simple
         return (
           <>
@@ -559,7 +570,7 @@ const ChineseCalligraphy = () => {
                     : 'bg-gray-100 text-gray-700'
                 }`}
               >
-                靠左
+                {direction === 'vertical' ? '靠左': '靠上'}
               </button>
               <button
                 onClick={() => setAlignment('center')}
@@ -579,7 +590,7 @@ const ChineseCalligraphy = () => {
                     : 'bg-gray-100 text-gray-700'
                 }`}
               >
-                靠右
+                {direction === 'vertical' ? '靠右' : '靠下'}
               </button>
             </div>
           </div>
@@ -693,6 +704,34 @@ const ChineseCalligraphy = () => {
                     className="w-full"
                   />
                 </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-600">
+                    水平偏移: {signatureOffsetX}px
+                  </label>
+                  <input
+                    type="range"
+                    min="-100"
+                    max="100"
+                    value={signatureOffsetX}
+                    onChange={(e) => setSignatureOffsetX(Number(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-600">
+                    垂直偏移: {signatureOffsetY}px
+                  </label>
+                  <input
+                    type="range"
+                    min="-100"
+                    max="100"
+                    value={signatureOffsetY}
+                    onChange={(e) => setSignatureOffsetY(Number(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
               </>
             )}
           </div>
@@ -743,8 +782,12 @@ const ChineseCalligraphy = () => {
 
             {showSignature && (
               <text
-                x={direction === 'vertical' ? 60 : svgDimensions.width - 60}
-                y={direction === 'vertical' ? svgDimensions.height - 100 : svgDimensions.height - 60}
+                x={direction === 'vertical' 
+                  ? 60 + signatureOffsetX 
+                  : svgDimensions.width - 60 + signatureOffsetX}
+                y={direction === 'vertical' 
+                  ? svgDimensions.height - 100 + signatureOffsetY 
+                  : svgDimensions.height - 60 + signatureOffsetY}
                 style={{
                   fontSize: `${signatureSize}px`,
                   fontFamily: `"${selectedFont}", cursive`,
