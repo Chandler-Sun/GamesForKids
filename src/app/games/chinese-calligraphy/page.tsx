@@ -2,14 +2,44 @@
 
 import React from 'react';
 
-// 修改字体数据结构
-const fontPaths: {[key: string]: string} = {
-  'Chun Qiu QiuHong': '/fonts/ChillCalligraphyChunQiu_QiuHong.otf',
-  'Chun Qiu ChenFeng': '/fonts/ChillCalligraphyChunQiu_ChenFeng.otf',
-  'Long Chang': '/fonts/ChillLongCangKaiShu_Medium.otf',
-  'Hetang': '/fonts/hetang-regular.ttf',
-  'Feibo': '/fonts/feibo.otf'
-};
+// 统一的字体配置
+const FONTS = [
+  {
+    id: 'Chun Qiu ChenFeng',
+    name: '乘风',
+    path: '/fonts/ChillCalligraphyChunQiu_ChenFeng.otf'
+  },
+  {
+    id: 'Chun Qiu QiuHong',
+    name: '秋鸿',
+    path: '/fonts/ChillCalligraphyChunQiu_QiuHong.otf'
+  },
+  {
+    id: 'Long Chang',
+    name: '龙藏',
+    path: '/fonts/ChillLongCangKaiShu_Medium.otf'
+  },
+  {
+    id: 'Hetang',
+    name: '荷塘手写体',
+    path: '/fonts/hetang-regular.ttf'
+  },
+  {
+    id: 'Feibo',
+    name: '飞波正点体',
+    path: '/fonts/feibo.otf'
+  },
+  {
+    id: 'Slidefu',
+    name: '演示佛系体',
+    path: '/fonts/Slidefu-Regular.ttf'
+  }
+] as const;
+
+// 生成字体路径映射
+const fontPaths: {[key: string]: string} = Object.fromEntries(
+  FONTS.map(font => [font.id, font.path])
+);
 
 const ChineseCalligraphy = () => {
   // 添加状态来追踪组件是否已经挂载
@@ -627,11 +657,11 @@ const ChineseCalligraphy = () => {
             onChange={(e) => setSelectedFont(e.target.value)}
             className="w-full p-2 rounded-lg border border-gray-200"
           >
-            <option value="Chun Qiu ChenFeng">乘风</option>
-            <option value="Chun Qiu QiuHong">秋鸿</option>
-            <option value="Long Chang">龙藏</option>
-            <option value="Hetang">荷塘手写体</option>
-            <option value="Feibo">飞波正点体</option>
+            {FONTS.map(font => (
+              <option key={font.id} value={font.id}>
+                {font.name}
+              </option>
+            ))}
           </select>
           
           <div className="flex gap-4">
