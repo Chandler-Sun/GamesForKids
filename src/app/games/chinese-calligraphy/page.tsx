@@ -444,7 +444,7 @@ const ChineseCalligraphy = () => {
       document.fonts.add(tempFont);
 
       // 等待一小段时间确保字体已经应用
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // 获取SVG的实际尺寸
       const width = svg.clientWidth * 4;
@@ -709,31 +709,45 @@ const ChineseCalligraphy = () => {
           <div className="space-y-2">
             <label className="text-sm text-gray-600">快捷配色</label>
             <div className="grid grid-cols-2 gap-2">
-              {colorThemes.map((theme) => (
-                <button
-                  key={theme.name}
-                  onClick={() => handleThemeChange(theme)}
-                  className="flex items-center gap-2 p-2 rounded-lg border border-gray-200 hover:bg-gray-50"
-                >
-                  <div className="flex-shrink-0 w-6 h-6 rounded border border-gray-200 overflow-hidden">
-                    <div
-                      style={{
-                        width: '100%',
-                        height: '50%',
-                        backgroundColor: theme.text
-                      }}
-                    />
-                    <div
-                      style={{
-                        width: '100%',
-                        height: '50%',
-                        backgroundColor: theme.bg
-                      }}
-                    />
-                  </div>
-                  <span className="text-sm">{theme.name}</span>
-                </button>
-              ))}
+              {colorThemes.map((theme) => {
+                // 判断当前主题是否被选中
+                const isSelected = theme.text === textColor && theme.bg === bgColor;
+                
+                return (
+                  <button
+                    key={theme.name}
+                    onClick={() => handleThemeChange(theme)}
+                    className={`
+                      flex items-center gap-2 p-2 rounded-lg 
+                      ${isSelected 
+                        ? 'border border-blue-500 bg-blue-50' 
+                        : 'border border-gray-200 hover:bg-gray-50'
+                      }
+                      transition-all duration-200
+                    `}
+                  >
+                    <div className="flex-shrink-0 w-6 h-6 rounded border border-gray-200 overflow-hidden">
+                      <div
+                        style={{
+                          width: '100%',
+                          height: '50%',
+                          backgroundColor: theme.text
+                        }}
+                      />
+                      <div
+                        style={{
+                          width: '100%',
+                          height: '50%',
+                          backgroundColor: theme.bg
+                        }}
+                      />
+                    </div>
+                    <span className={`text-sm ${isSelected ? 'font-medium text-blue-600' : ''}`}>
+                      {theme.name}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
           
