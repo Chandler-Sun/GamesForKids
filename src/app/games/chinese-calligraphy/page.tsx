@@ -55,7 +55,12 @@ const ChineseCalligraphy = () => {
     }
     try {
       const stored = localStorage.getItem(key);
-      return stored !== null ? JSON.parse(stored) : defaultValue;
+      if (stored === null) return defaultValue;
+      try {
+        return JSON.parse(stored);
+      } catch {
+        return stored; // 如果解析失败则返回原始字符串
+      }
     } catch {
       return defaultValue;
     }
@@ -64,12 +69,13 @@ const ChineseCalligraphy = () => {
   // 修改所有使用 localStorage 的状态初始化，使用普通值作为初始状态
   const [text, setText] = React.useState("取法于上，仅得为中。\n取法于中，故为其下。");
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+  const [fontData, setFontData] = React.useState<{[key: string]: string}>({});
   const [selectedFont, setSelectedFont] = React.useState('Chun Qiu ChenFeng');
   const [textColor, setTextColor] = React.useState('#333333');
   const [bgColor, setBackgroundColor] = React.useState('#ffffff');
   const [textSize, setTextSize] = React.useState(30);
   const [spacing, setSpacing] = React.useState(60);
-  const [letterSpacing, setLetterSpacing] = React.useState(-0.25);
+  const [letterSpacing, setLetterSpacing] = React.useState(0);
   const [alignment, setAlignment] = React.useState<'left' | 'center' | 'right'>('center');
   const [direction, setDirection] = React.useState<'vertical' | 'horizontal'>('vertical');
   const [template, setTemplate] = React.useState<'simple' | 'cloud' | 'mountain' | 'bamboo' | 'newyear'>('simple');
@@ -87,18 +93,56 @@ const ChineseCalligraphy = () => {
       setTextColor(getLocalStorage('calligraphy_textColor', textColor));
       setBackgroundColor(getLocalStorage('calligraphy_bgColor', bgColor));
       setTextSize(parseInt(getLocalStorage('calligraphy_textSize', textSize)));
-      setSpacing(getLocalStorage('calligraphy_spacing', spacing));
+      setSpacing(parseInt(getLocalStorage('calligraphy_spacing', spacing)));
       setLetterSpacing(parseFloat(getLocalStorage('calligraphy_letterSpacing', letterSpacing)));
       setAlignment(getLocalStorage('calligraphy_alignment', alignment));
       setDirection(getLocalStorage('calligraphy_direction', direction));
       setTemplate(getLocalStorage('calligraphy_template', template));
-      setShowSignature(getLocalStorage('calligraphy_showSignature', 'false') === 'true');
+      setShowSignature(getLocalStorage('calligraphy_showSignature', 'false') === true);
       setSignatureText(getLocalStorage('calligraphy_signatureText', signatureText));
       setSignatureSize(parseInt(getLocalStorage('calligraphy_signatureSize', signatureSize)));
       setSignatureOffsetX(parseInt(getLocalStorage('calligraphy_signatureOffsetX', signatureOffsetX)));
       setSignatureOffsetY(parseInt(getLocalStorage('calligraphy_signatureOffsetY', signatureOffsetY)));
     }
   }, []);
+
+  // 添加保存到 localStorage 的 useEffect
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && isClient) {
+      localStorage.setItem('calligraphy_text', text);
+      localStorage.setItem('calligraphy_font', selectedFont);
+      localStorage.setItem('calligraphy_textColor', textColor);
+      localStorage.setItem('calligraphy_bgColor', bgColor);
+      localStorage.setItem('calligraphy_textSize', textSize.toString());
+      localStorage.setItem('calligraphy_spacing', spacing.toString());
+      localStorage.setItem('calligraphy_letterSpacing', letterSpacing.toString());
+      localStorage.setItem('calligraphy_alignment', alignment);
+      localStorage.setItem('calligraphy_direction', direction);
+      localStorage.setItem('calligraphy_template', template);
+      localStorage.setItem('calligraphy_showSignature', showSignature.toString());
+      localStorage.setItem('calligraphy_signatureText', signatureText);
+      localStorage.setItem('calligraphy_signatureSize', signatureSize.toString());
+      localStorage.setItem('calligraphy_signatureOffsetX', signatureOffsetX.toString());
+      localStorage.setItem('calligraphy_signatureOffsetY', signatureOffsetY.toString());
+    }
+  }, [
+    isClient,
+    text,
+    selectedFont,
+    textColor,
+    bgColor,
+    textSize,
+    spacing,
+    letterSpacing,
+    alignment,
+    direction,
+    template,
+    showSignature,
+    signatureText,
+    signatureSize,
+    signatureOffsetX,
+    signatureOffsetY
+  ]);
 
   // 获取 SVG 尺寸
   const svgDimensions = React.useMemo(() => {
@@ -122,6 +166,7 @@ const ChineseCalligraphy = () => {
         for (const [name, path] of Object.entries(fonts)) {
           loadedFonts[name] = await loadFont(path);
         }
+        setFontData(loadedFonts);
       } catch (error) {
         console.error('加载字体失败:', error);
       }
@@ -437,6 +482,16 @@ const ChineseCalligraphy = () => {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // 添加下载处理函数
+  const handleDownload = () => {
+    if (!previewUrl) return;
+    
+    const link = document.createElement('a');
+    link.download = `书法作品_${new Date().toLocaleDateString('zh-CN')}.png`;
+    link.href = previewUrl;
+    link.click();
+  };
 
   // 只在客户端渲染时显示内容
   if (!isClient) {
@@ -864,11 +919,19 @@ const ChineseCalligraphy = () => {
                 取消
               </button>
               <button
-                onClick={handleConfirmPrint}
-                className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors duration-200"
+                onClick={handleDownload}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors duration-200"
               >
-                打印
+                下载
               </button>
+              {!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && (
+                <button
+                    onClick={handleConfirmPrint}
+                    className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors duration-200"
+                >
+                    打印
+                </button>
+              )}
             </div>
           </div>
         </div>
