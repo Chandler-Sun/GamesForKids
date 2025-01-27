@@ -1,18 +1,14 @@
 "use client"
 
 import React from 'react';
-import './page.module.css';
 
-// 添加字体加载函数
-const loadFont = async (url: string): Promise<string> => {
-  const response = await fetch(url);
-  const blob = await response.blob();
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => resolve(reader.result as string);
-    reader.onerror = reject;
-    reader.readAsDataURL(blob);
-  });
+// 修改字体数据结构
+const fontPaths: {[key: string]: string} = {
+  'Chun Qiu QiuHong': '/fonts/ChillCalligraphyChunQiu_QiuHong.otf',
+  'Chun Qiu ChenFeng': '/fonts/ChillCalligraphyChunQiu_ChenFeng.otf',
+  'Long Chang': '/fonts/ChillLongCangKaiShu_Medium.otf',
+  'Hetang': '/fonts/hetang-regular.ttf',
+  'Feibo': '/fonts/feibo.otf'
 };
 
 const ChineseCalligraphy = () => {
@@ -151,29 +147,22 @@ const ChineseCalligraphy = () => {
       : { width: 400, height: 300 };
   }, [direction]);
 
-  // 加载字体文件
-  React.useEffect(() => {
-    const loadFonts = async () => {
-      try {
-        const fonts = {
-          'Chun Qiu QiuHong': '/fonts/ChillCalligraphyChunQiu_QiuHong.otf',
-          'Chun Qiu ChenFeng': '/fonts/ChillCalligraphyChunQiu_ChenFeng.otf',
-          'Long Chang': '/fonts/ChillLongCangKaiShu_Medium.otf',
-          'KingHwa_OldSong': '/fonts/KingHwa_OldSong.ttf'
-        };
-        
-        const loadedFonts: {[key: string]: string} = {};
-        for (const [name, path] of Object.entries(fonts)) {
-          loadedFonts[name] = await loadFont(path);
-        }
-        setFontData(loadedFonts);
-      } catch (error) {
-        console.error('加载字体失败:', error);
-      }
-    };
-    
-    loadFonts();
-  }, []);
+  // 修改字体加载函数
+  const loadFont = async (url: string): Promise<string> => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('加载字体失败:', error);
+      return '';
+    }
+  };
 
   // 将文本分割成句子
   const sentences = React.useMemo(() => {
@@ -383,49 +372,72 @@ const ChineseCalligraphy = () => {
     }
   };
 
-  // 修改导出功能为打印功能
-  const handlePrint = () => {
+  // 修改导出功能
+  const handlePrint = async () => {
     const svg = document.getElementById('calligraphy');
     if (!svg) return;
 
-    // 获取SVG的实际尺寸
-    const width = svg.clientWidth * 4;  // 使用2倍尺寸以获得更清晰的图像
-    const height = svg.clientHeight * 4;
+    try {
+      // 在导出前加载字体并等待加载完成
+      let fontDataBlob = fontData[fontPaths[selectedFont]];
+      if (!fontDataBlob) {
+        fontDataBlob = await loadFont(fontPaths[selectedFont]);
+        setFontData(prev => ({
+          ...prev,
+          [fontPaths[selectedFont]]: fontDataBlob
+        }));
+      }
 
-    const svgData = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-        <style>
-          ${Object.entries(fontData).map(([name, data]) => `
+      // 创建一个临时的 FontFace 对象并等待字体加载完成
+      const tempFont = new FontFace(selectedFont, `url(${fontDataBlob})`);
+      await tempFont.load();
+      document.fonts.add(tempFont);
+
+      // 等待一小段时间确保字体已经应用
+      await new Promise(resolve => setTimeout(resolve, 200));
+
+      // 获取SVG的实际尺寸
+      const width = svg.clientWidth * 4;
+      const height = svg.clientHeight * 4;
+
+      const svgData = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+          <style>
             @font-face {
-              font-family: '${name}';
-              src: url('${data}') format('opentype');
+              font-family: '${selectedFont}';
+              src: url('${fontDataBlob}') format('opentype');
             }
-          `).join('\n')}
-          @media print {
-            body { margin: 0; }
-            svg { page-break-inside: avoid; }
-          }
-        </style>
-        <g transform="scale(4)">
-          ${svg.innerHTML}
-        </g>
-      </svg>
-    `;
-    const blob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
-    const url = URL.createObjectURL(blob);
+            @media print {
+              body { margin: 0; }
+              svg { page-break-inside: avoid; }
+            }
+          </style>
+          <g transform="scale(4)">
+            ${svg.innerHTML}
+          </g>
+        </svg>
+      `;
 
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
+      const blob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
 
-      ctx.drawImage(img, 0, 0);
-      setPreviewUrl(canvas.toDataURL('image/png'));
-    };
-    img.src = url;
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        ctx.drawImage(img, 0, 0);
+        setPreviewUrl(canvas.toDataURL('image/png'));
+        URL.revokeObjectURL(url); // 清理URL对象
+      };
+      img.src = url;
+    } catch (error) {
+      console.error('生成预览图片时出错:', error);
+      // 可以在这里添加错误提示
+    }
   };
 
   // 修改确认导出为确认打印
@@ -618,7 +630,8 @@ const ChineseCalligraphy = () => {
             <option value="Chun Qiu ChenFeng">乘风</option>
             <option value="Chun Qiu QiuHong">秋鸿</option>
             <option value="Long Chang">龙藏</option>
-            <option value="KingHwa_OldSong">京華老宋体</option>
+            <option value="Hetang">荷塘手写体</option>
+            <option value="Feibo">飞波正点体</option>
           </select>
           
           <div className="flex gap-4">
@@ -899,13 +912,18 @@ const ChineseCalligraphy = () => {
             id="calligraphy"
             width={svgDimensions.width} 
             height={svgDimensions.height} 
-            viewBox={`0 0 ${svgDimensions.width} ${svgDimensions.height}`} 
-            className={`
-              rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-sm
-              ${isMobile ? 'max-w-full h-auto' : ''}
-            `}
+            viewBox={`0 0 ${svgDimensions.width} ${svgDimensions.height}`}
+            className={`rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-sm ${isMobile ? 'max-w-full h-auto' : ''}`}
           >
             <defs>
+              <style type="text/css">
+                {`
+                  @font-face {
+                    font-family: "${selectedFont}";
+                    src: url("${fontPaths[selectedFont]}") format("opentype");
+                  }
+                `}
+              </style>
               <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" style={{ stopColor: bgColor }} />
                 <stop offset="100%" style={{ stopColor: bgColor }} />

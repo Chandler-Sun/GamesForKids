@@ -14,8 +14,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "儿童小游戏中心",
-  description: "儿童小游戏中心",
+  title: "小游戏小工具中心",
+  description: "小游戏小工具中心",
 };
 
 export default function RootLayout({
