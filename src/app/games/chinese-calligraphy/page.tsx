@@ -110,6 +110,11 @@ const ChineseCalligraphy = () => {
   const [signatureSize, setSignatureSize] = React.useState(16);
   const [signatureOffsetX, setSignatureOffsetX] = React.useState(0);
   const [signatureOffsetY, setSignatureOffsetY] = React.useState(0);
+  const [showTitle, setShowTitle] = React.useState(false);
+  const [titleText, setTitleText] = React.useState('敬祝：');
+  const [titleSize, setTitleSize] = React.useState(24);
+  const [titleOffsetX, setTitleOffsetX] = React.useState(0);
+  const [titleOffsetY, setTitleOffsetY] = React.useState(0);
 
   // 在组件挂载后从 localStorage 加载数据
   React.useEffect(() => {
@@ -129,6 +134,11 @@ const ChineseCalligraphy = () => {
       setSignatureSize(parseInt(getLocalStorage('calligraphy_signatureSize', signatureSize)));
       setSignatureOffsetX(parseInt(getLocalStorage('calligraphy_signatureOffsetX', signatureOffsetX)));
       setSignatureOffsetY(parseInt(getLocalStorage('calligraphy_signatureOffsetY', signatureOffsetY)));
+      setShowTitle(getLocalStorage('calligraphy_showTitle', false));
+      setTitleText(getLocalStorage('calligraphy_titleText', titleText));
+      setTitleSize(parseInt(getLocalStorage('calligraphy_titleSize', titleSize)));
+      setTitleOffsetX(parseInt(getLocalStorage('calligraphy_titleOffsetX', titleOffsetX)));
+      setTitleOffsetY(parseInt(getLocalStorage('calligraphy_titleOffsetY', titleOffsetY)));
     }
   }, []);
 
@@ -150,6 +160,11 @@ const ChineseCalligraphy = () => {
       localStorage.setItem('calligraphy_signatureSize', signatureSize.toString());
       localStorage.setItem('calligraphy_signatureOffsetX', signatureOffsetX.toString());
       localStorage.setItem('calligraphy_signatureOffsetY', signatureOffsetY.toString());
+      localStorage.setItem('calligraphy_showTitle', showTitle.toString());
+      localStorage.setItem('calligraphy_titleText', titleText);
+      localStorage.setItem('calligraphy_titleSize', titleSize.toString());
+      localStorage.setItem('calligraphy_titleOffsetX', titleOffsetX.toString());
+      localStorage.setItem('calligraphy_titleOffsetY', titleOffsetY.toString());
     }
   }, [
     isClient,
@@ -167,7 +182,12 @@ const ChineseCalligraphy = () => {
     signatureText,
     signatureSize,
     signatureOffsetX,
-    signatureOffsetY
+    signatureOffsetY,
+    showTitle,
+    titleText,
+    titleSize,
+    titleOffsetX,
+    titleOffsetY
   ]);
 
   // 获取 SVG 尺寸
@@ -930,6 +950,71 @@ const ChineseCalligraphy = () => {
               </>
             )}
           </div>
+
+          {/* 在控制面板中添加称谓控制，放在落款控制之前 */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-600">显示称谓</label>
+              <input
+                type="checkbox"
+                checked={showTitle}
+                onChange={(e) => setShowTitle(e.target.checked)}
+                className="rounded"
+              />
+            </div>
+            
+            {showTitle && (
+              <>
+                <input
+                  type="text"
+                  value={titleText}
+                  onChange={(e) => setTitleText(e.target.value)}
+                  placeholder="请输入称谓文字"
+                  className="w-full p-2 rounded-lg border border-gray-200"
+                />
+                
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-600">称谓字号: {titleSize}px</label>
+                  <input
+                    type="range"
+                    min="16"
+                    max="36"
+                    value={titleSize}
+                    onChange={(e) => setTitleSize(Number(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-600">
+                    水平偏移: {titleOffsetX}px
+                  </label>
+                  <input
+                    type="range"
+                    min="-100"
+                    max="100"
+                    value={titleOffsetX}
+                    onChange={(e) => setTitleOffsetX(Number(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-600">
+                    垂直偏移: {titleOffsetY}px
+                  </label>
+                  <input
+                    type="range"
+                    min="-100"
+                    max="100"
+                    value={titleOffsetY}
+                    onChange={(e) => setTitleOffsetY(Number(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+              </>
+            )}
+          </div>
         </div>
 
         {/* 预览区域 */}
@@ -964,6 +1049,29 @@ const ChineseCalligraphy = () => {
             
             {/* 使用模版渲染函数 */}
             {renderTemplate()}
+            
+            {/* 在 SVG 中添加称谓渲染，放在主文本渲染之前 */}
+            {showTitle && (
+              <text
+                x={direction === 'vertical' 
+                  ? svgDimensions.width - 50 + titleOffsetX
+                  : 60 + titleOffsetX}
+                y={direction === 'vertical'
+                  ? 60 + titleOffsetY
+                  : 60 + titleOffsetY}
+                style={{
+                  fontSize: `${titleSize}px`,
+                  fontFamily: `"${selectedFont}", cursive`,
+                  fill: textColor,
+                  opacity: 0.85,
+                  writingMode: direction === 'vertical' ? 'vertical-rl' : 'horizontal-tb',
+                  textAnchor: direction === 'vertical' ? 'start' : 'start',
+                  dominantBaseline: direction === 'vertical' ? 'hanging' : 'hanging'
+                }}
+              >
+                {titleText}
+              </text>
+            )}
             
             {/* 更新文字渲染 */}
             {sentences.map((sentence: string, index: number) => {
