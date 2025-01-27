@@ -443,16 +443,53 @@ const ChineseCalligraphy = () => {
     setBackgroundColor(theme.bg);
   };
 
+  // 添加移动端检测
+  const [isMobile, setIsMobile] = React.useState(false);
+  const [showControls, setShowControls] = React.useState(true);
+
+  // 检测设备类型
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-8">
-      <nav className="fixed top-0 left-0 w-full p-4 flex justify-between items-center mb-16">
+    <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
+      <nav className="fixed top-0 left-0 w-full p-4 flex justify-between items-center mb-16 z-10">
         <a href="/" className="text-lg font-bold">返回首页</a>
+        {/* 移动端显示控制面板切换按钮 */}
+        {isMobile && (
+          <button
+            onClick={() => setShowControls(!showControls)}
+            className="px-4 py-2 bg-gray-800 text-white rounded-md"
+          >
+            {showControls ? '隐藏控制' : '显示控制'}
+          </button>
+        )}
       </nav>
-      <div className="flex gap-8 h-[calc(100vh-120px)] mt-16">
-        {/* 左侧控制面板 - 添加独立滚动 */}
-        <div className="w-80 overflow-y-auto pr-4 space-y-4">
-          {/* 添加控制面板 */}
-          <div className="space-y-2"></div>
+
+      <div className={`flex ${isMobile ? 'flex-col' : 'flex-row gap-8'} h-[calc(100vh-120px)] mt-16`}>
+        {/* 控制面板 - 移动端时可折叠 */}
+        <div 
+          className={`
+            ${isMobile ? 'fixed bottom-0 left-0 right-0 z-20 bg-white shadow-lg rounded-t-2xl transition-transform duration-300' : 'w-80'} 
+            ${isMobile && !showControls ? 'translate-y-full' : 'translate-y-0'}
+            overflow-y-auto
+            ${isMobile ? 'max-h-[70vh] p-4' : 'pr-4'}
+            space-y-4
+          `}
+        >
+          {/* 移动端添加拖动条 */}
+          {isMobile && (
+            <div className="w-16 h-1 bg-gray-300 rounded-full mx-auto mb-4" />
+          )}
+          
+          {/* 现有的控制面板内容 */}
           <textarea
             value={text}
             onChange={handleTextChange}
@@ -737,14 +774,21 @@ const ChineseCalligraphy = () => {
           </div>
         </div>
 
-        {/* 右侧预览区域 - 固定在中间 */}
-        <div className="flex flex-col items-center justify-center sticky top-0 h-fit">
+        {/* 预览区域 */}
+        <div className={`
+          flex flex-col items-center justify-center 
+          ${isMobile ? 'mb-[70vh]' : 'sticky top-0'} 
+          h-fit
+        `}>
           <svg 
             id="calligraphy"
             width={svgDimensions.width} 
             height={svgDimensions.height} 
             viewBox={`0 0 ${svgDimensions.width} ${svgDimensions.height}`} 
-            className="rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-sm"
+            className={`
+              rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-sm
+              ${isMobile ? 'max-w-full h-auto' : ''}
+            `}
           >
             <defs>
               <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -802,29 +846,26 @@ const ChineseCalligraphy = () => {
               </text>
             )}
           </svg>
+          
           <button
             onClick={handlePrint}
             className="mt-6 px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors duration-200 shadow-md"
           >
-            预览并打印
+            导出图片
           </button>
         </div>
       </div>
 
-      {/* 修改预览对话框样式 */}
+      {/* 预览对话框 - 调整移动端样式 */}
       {previewUrl && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-fit">
+          <div className="bg-white p-4 md:p-6 rounded-lg shadow-xl w-[95vw] md:w-fit max-h-[90vh] overflow-auto">
             <h3 className="text-lg font-semibold mb-4">预览图片</h3>
-            <div className="overflow-auto max-h-[80vh]">
+            <div className="overflow-auto">
               <img 
                 src={previewUrl} 
                 alt="预览" 
-                style={{
-                  width: '300px',  // 与原始SVG宽度相同
-                  height: '400px', // 与原始SVG高度相同
-                  objectFit: 'contain'
-                }} 
+                className="w-full md:w-[300px] h-auto object-contain"
               />
             </div>
             <div className="flex justify-end gap-4 mt-4">
@@ -838,7 +879,7 @@ const ChineseCalligraphy = () => {
                 onClick={handleConfirmPrint}
                 className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors duration-200"
               >
-                确认打印
+                打印
               </button>
             </div>
           </div>
