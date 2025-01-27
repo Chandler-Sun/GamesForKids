@@ -22,7 +22,7 @@
 @font-face {
     font-family: 'KingHwa_OldSong';
     font-style: normal;
-    font-weight: 400;
+    font-weight: bold;
     font-display: swap;
     src: url(/fonts/KingHwa_OldSong.ttf) format('truetype');
 }

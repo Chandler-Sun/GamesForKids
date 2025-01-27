@@ -35,7 +35,7 @@ const ChineseCalligraphy = () => {
     { name: '紫气东来', text: '#4b0082', bg: '#f8f4ff' },
     { name: '金石典藏', text: '#8b4513', bg: '#faf0e6' },
     { name: '新年喜庆', text: '#d4000f', bg: '#fff1f0' },
-    { name: '赛博朋克', text: '#00ff9f', bg: '#1a1a2e' },
+    { name: '赛博朋克', text: '#ff7b00', bg: '#1a1a2e' },
   ];
 
   // 添加预设的落款文字选项
@@ -492,6 +492,66 @@ const ChineseCalligraphy = () => {
     link.href = previewUrl;
     link.click();
   };
+  // 添加控制面板高度的状态
+  const [panelHeight, setPanelHeight] = React.useState(70);
+  const [isDragging, setIsDragging] = React.useState(false);
+  const dragStartY = React.useRef(0);
+  const dragStartHeight = React.useRef(0);
+
+  // 处理拖动开始
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault(); // 防止默认行为
+    setIsDragging(true);
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    dragStartY.current = clientY;
+    dragStartHeight.current = panelHeight;
+  };
+
+  // 处理拖动过程
+  const handleDrag = React.useCallback((e: MouseEvent | TouchEvent) => {
+    if (!isDragging) return;
+    
+    e.preventDefault(); // 防止默认行为
+    const clientY = 'touches' in e ? (e as TouchEvent).touches[0].clientY : (e as MouseEvent).clientY;
+    const delta = dragStartY.current - clientY;
+    const windowHeight = window.innerHeight;
+    const newHeight = Math.min(Math.max(dragStartHeight.current + (delta / windowHeight) * 100, 30), 90);
+    
+    setPanelHeight(newHeight);
+  }, [isDragging]);
+
+  // 处理拖动结束
+  const handleDragEnd = (e: MouseEvent | TouchEvent) => {
+    e.preventDefault(); // 防止默认行为
+    setIsDragging(false);
+  };
+
+  // 添加拖动事件监听
+  React.useEffect(() => {
+    const handleDragWithPrevent = (e: MouseEvent | TouchEvent) => {
+      e.preventDefault(); // 防止默认行为
+      handleDrag(e);
+    };
+
+    const handleDragEndWithPrevent = (e: MouseEvent | TouchEvent) => {
+      e.preventDefault(); // 防止默认行为
+      handleDragEnd(e);
+    };
+
+    if (isDragging) {
+      window.addEventListener('mousemove', handleDragWithPrevent, { passive: false });
+      window.addEventListener('touchmove', handleDragWithPrevent, { passive: false });
+      window.addEventListener('mouseup', handleDragEndWithPrevent);
+      window.addEventListener('touchend', handleDragEndWithPrevent);
+    }
+    
+    return () => {
+      window.removeEventListener('mousemove', handleDragWithPrevent);
+      window.removeEventListener('touchmove', handleDragWithPrevent);
+      window.removeEventListener('mouseup', handleDragEndWithPrevent);
+      window.removeEventListener('touchend', handleDragEndWithPrevent);
+    };
+  }, [isDragging, handleDrag]);
 
   // 只在客户端渲染时显示内容
   if (!isClient) {
@@ -510,25 +570,37 @@ const ChineseCalligraphy = () => {
             onClick={() => setShowControls(!showControls)}
             className="px-4 py-2 bg-gray-800 text-white rounded-md"
           >
-            {showControls ? '隐藏控制' : '显示控制'}
+            {showControls ? '隐藏设置' : '显示设置'}
           </button>
         )}
       </nav>
 
       <div className={`flex ${isMobile ? 'flex-col' : 'flex-row gap-8'} h-[calc(100vh-120px)] mt-16`}>
-        {/* 控制面板 - 移动端时可折叠 */}
+        {/* 控制面板 - 移动端时可拖动 */}
         <div 
           className={`
-            ${isMobile ? 'fixed bottom-0 left-0 right-0 z-20 bg-white shadow-lg rounded-t-2xl transition-transform duration-300' : 'w-80'} 
+            ${isMobile ? `fixed bottom-0 left-0 right-0 z-20 bg-white shadow-lg rounded-t-2xl transition-transform duration-300` : 'w-80'} 
             ${isMobile && !showControls ? 'translate-y-full' : 'translate-y-0'}
             overflow-y-auto
-            ${isMobile ? 'max-h-[70vh] p-4' : 'pr-4'}
+            ${isMobile ? 'p-4 pt-0' : 'pr-4'}
             space-y-4
           `}
+          style={isMobile ? {
+            maxHeight: `${panelHeight}vh`,
+            touchAction: isDragging ? 'none' : 'auto'
+          } : undefined}
         >
-          {/* 移动端添加拖动条 */}
+          {/* 可拖动的手柄 */}
           {isMobile && (
-            <div className="w-16 h-1 bg-gray-300 rounded-full mx-auto mb-4" />
+            <div 
+              className={`sticky top-0 pt-4 pb-2 bg-white z-10 flex justify-center w-full cursor-grab ${isDragging ? 'cursor-grabbing' : ''}`}
+              onMouseDown={handleDragStart}
+              onTouchStart={handleDragStart}
+            >
+              <div 
+                className={`w-24 h-4 bg-gray-300 rounded-full`}
+              />
+            </div>
           )}
           
           {/* 现有的控制面板内容 */}
@@ -536,7 +608,7 @@ const ChineseCalligraphy = () => {
             value={text}
             onChange={handleTextChange}
             placeholder="请输入书法文本..."
-            className="w-full h-32 p-3 rounded-lg border border-gray-200 resize-none"
+            className="w-full h-28 p-3 rounded-lg border border-gray-200 resize-none"
           />
           <select
             value={selectedFont}
@@ -607,7 +679,7 @@ const ChineseCalligraphy = () => {
             <input
               type="range"
               min="20"
-              max="50"
+              max="60"
               value={textSize}
               onChange={(e) => setTextSize(Number(e.target.value))}
               className="w-full"
