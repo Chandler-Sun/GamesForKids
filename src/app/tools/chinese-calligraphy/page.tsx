@@ -1249,7 +1249,7 @@ const ChineseCalligraphy = () => {
               />
               {isWeixinBrowser && (
                 <div className="text-sm text-gray-500 mt-2 text-center">
-                  点击图片可在微信中预览
+                  长按图片保存
                 </div>
               )}
             </div>
