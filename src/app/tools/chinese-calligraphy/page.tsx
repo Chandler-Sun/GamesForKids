@@ -447,13 +447,22 @@ const ChineseCalligraphy = () => {
         }));
       }
 
-      // 创建一个临时的 FontFace 对象并等待字体加载完成
+      // 创建并加载字体
       const tempFont = new FontFace(selectedFont, `url(${fontDataBlob})`);
       await tempFont.load();
       document.fonts.add(tempFont);
 
-      // 等待一小段时间确保字体已经应用
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // 确保字体已经完全加载并可用
+      await document.fonts.ready;
+      
+      // 额外检查字体是否已加载
+      const fontLoaded = await document.fonts.check(`1em "${selectedFont}"`);
+      if (!fontLoaded) {
+        throw new Error('字体加载失败');
+      }
+
+      // 增加等待时间以确保字体渲染完成
+    //   await new Promise(resolve => setTimeout(resolve, 100));
 
       // 获取SVG的实际尺寸
       const width = svg.clientWidth * 4;
@@ -481,21 +490,32 @@ const ChineseCalligraphy = () => {
       const url = URL.createObjectURL(blob);
 
       const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
+      const loadImagePromise = new Promise((resolve, reject) => {
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('无法创建canvas上下文'));
+            return;
+          }
 
-        ctx.drawImage(img, 0, 0);
-        setPreviewUrl(canvas.toDataURL('image/png'));
-        URL.revokeObjectURL(url); // 清理URL对象
-      };
-      img.src = url;
+          ctx.font = `1em "${selectedFont}"`;
+          ctx.drawImage(img, 0, 0);
+          setPreviewUrl(canvas.toDataURL('image/png'));
+          URL.revokeObjectURL(url);
+          resolve(null);
+        };
+        img.onerror = () => reject(new Error('图片加载失败'));
+        img.src = url;
+      });
+
+      await loadImagePromise;
+
     } catch (error) {
       console.error('生成预览图片时出错:', error);
-      // 可以在这里添加错误提示
+      alert('生成预览图片失败，请重试');
     }
   };
 
@@ -779,6 +799,20 @@ const ChineseCalligraphy = () => {
             className="w-full h-20 p-3 rounded-lg border border-gray-200 resize-none"
           />
 
+        <select
+            value={selectedFont}
+            onChange={(e) => setSelectedFont(e.target.value)}
+            className="w-full p-2 rounded-lg border border-gray-200"
+          >
+            {FONTS.map(font => (
+              <option key={font.id} value={font.id}>
+                {font.name}
+              </option>
+            ))}
+          </select>
+          
+
+
 
 <div className="space-y-2">
             <label className="text-sm text-gray-600">字体大小: {textSize}px</label>
@@ -817,20 +851,6 @@ const ChineseCalligraphy = () => {
             />
           </div>
           
-          <select
-            value={selectedFont}
-            onChange={(e) => setSelectedFont(e.target.value)}
-            className="w-full p-2 rounded-lg border border-gray-200"
-          >
-            {FONTS.map(font => (
-              <option key={font.id} value={font.id}>
-                {font.name}
-              </option>
-            ))}
-          </select>
-          
-
-
           {/* 在控制面板中添加称谓控制，放在落款控制之前 */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -841,7 +861,6 @@ const ChineseCalligraphy = () => {
                 onChange={(e) => setShowTitle(e.target.checked)}
                 className="rounded"
               />
-            <span className="text-xs text-gray-400">(拖动调整位置)</span>
             </div>
             
             {showTitle && (
@@ -864,6 +883,7 @@ const ChineseCalligraphy = () => {
                     onChange={(e) => setTitleSize(Number(e.target.value))}
                     className="w-full"
                   />
+                <span className="text-xs text-gray-400">拖动图中文字调整位置</span>
                 </div>
               </>
             )}
@@ -878,20 +898,16 @@ const ChineseCalligraphy = () => {
                 onChange={(e) => setShowSignature(e.target.checked)}
                 className="rounded"
               />
-            <span className="text-xs text-gray-400">(拖动调整位置)</span>
             </div>
-            
             {showSignature && (
               <>
-                <select
+                <input
+                  type="text"
                   value={signatureText}
-                  onChange={(e) => setSignatureText(e.target.value)}
-                  className="w-full p-2 rounded-lg border border-gray-200"
-                >
-                  {signatureTexts.map((text) => (
-                    <option key={text} value={text}>{text}</option>
-                  ))}
-                </select>
+                  onChange={(e) => setSignatureText(e.target.value)} 
+                  placeholder="输入自定义落款"
+                  className="w-full p-2 mt-2 rounded-lg border border-gray-200"
+                />
                 
                 <div className="space-y-2">
                   <label className="text-sm text-gray-600">落款字号: {signatureSize}px</label>
@@ -903,6 +919,7 @@ const ChineseCalligraphy = () => {
                     onChange={(e) => setSignatureSize(Number(e.target.value))}
                     className="w-full"
                   />
+                 <span className="text-xs text-gray-400">拖动图中文字调整位置</span>
                 </div>
               </>
             )}
