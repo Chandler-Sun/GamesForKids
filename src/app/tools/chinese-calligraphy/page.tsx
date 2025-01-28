@@ -719,6 +719,13 @@ const ChineseCalligraphy = () => {
     };
   }, [isDraggingTitle, isDraggingSignature, handleElementDrag]);
 
+  // 添加微信 JS-SDK 检测函数
+  const isWeixinBrowser = React.useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    const ua = navigator.userAgent.toLowerCase();
+    return ua.indexOf('micromessenger') !== -1;
+  }, []);
+
   // 只在客户端渲染时显示内容
   if (!isClient) {
     return <div className="min-h-screen flex items-center justify-center">
@@ -1229,8 +1236,22 @@ const ChineseCalligraphy = () => {
               <img 
                 src={previewUrl} 
                 alt="预览" 
-                className="w-full md:w-[300px] h-auto object-contain"
+                className={`w-full md:w-[300px] h-auto object-contain ${isWeixinBrowser ? 'cursor-pointer' : ''}`}
+                onClick={() => {
+                  if (isWeixinBrowser && typeof wx !== 'undefined') {
+                    // 调用微信图片预览
+                    wx.previewImage({
+                      current: previewUrl,
+                      urls: [previewUrl]
+                    });
+                  }
+                }}
               />
+              {isWeixinBrowser && (
+                <div className="text-sm text-gray-500 mt-2 text-center">
+                  点击图片可在微信中预览
+                </div>
+              )}
             </div>
             <div className="flex justify-end gap-4 mt-4">
               <button
@@ -1245,12 +1266,12 @@ const ChineseCalligraphy = () => {
               >
                 下载
               </button>
-              {!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && (
+              {!isWeixinBrowser && !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) && (
                 <button
-                    onClick={handleConfirmPrint}
-                    className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors duration-200"
+                  onClick={handleConfirmPrint}
+                  className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors duration-200"
                 >
-                    打印
+                  打印
                 </button>
               )}
             </div>
