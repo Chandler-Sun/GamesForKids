@@ -564,7 +564,7 @@ const ChineseCalligraphy = () => {
     link.click();
   };
   // 添加控制面板高度的状态
-  const [panelHeight, setPanelHeight] = React.useState(70);
+  const [panelHeight, setPanelHeight] = React.useState(40);
   const [isDragging, setIsDragging] = React.useState(false);
   const dragStartY = React.useRef(0);
   const dragStartHeight = React.useRef(0);
@@ -633,17 +633,39 @@ const ChineseCalligraphy = () => {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-8">
-      <nav className="fixed top-0 left-0 w-full p-4 flex justify-between items-center mb-16 z-10">
+      <nav className="fixed top-0 left-0 w-full p-4 flex justify-between items-center mb-16 z-10 bg-white/80 backdrop-blur-sm shadow-sm">
         <a href="/" className="text-lg font-bold">返回首页</a>
-        {/* 移动端显示控制面板切换按钮 */}
-        {isMobile && (
+        
+        <div className="flex items-center gap-4">
           <button
-            onClick={() => setShowControls(!showControls)}
-            className="px-4 py-2 bg-gray-800 text-white rounded-md"
+            onClick={handlePrint}
+            className="px-4 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors duration-200"
           >
-            {showControls ? '隐藏设置' : '显示设置'}
+            导出图片
           </button>
-        )}
+          
+          {/* 移动端显示控制面板切换按钮 - 使用图标 */}
+          {isMobile && (
+            <button
+              onClick={() => setShowControls(!showControls)}
+              className={`p-2 rounded-full transition-colors duration-200 ${
+                showControls ? 'bg-gray-200' : 'bg-gray-100'
+              }`}
+              aria-label={showControls ? '隐藏设置' : '显示设置'}
+            >
+              {showControls ? (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              )}
+            </button>
+          )}
+        </div>
       </nav>
 
       <div className={`flex ${isMobile ? 'flex-col' : 'flex-row gap-8'} h-[calc(100vh-120px)] mt-16`}>
@@ -1142,13 +1164,6 @@ const ChineseCalligraphy = () => {
               </text>
             )}
           </svg>
-          
-          <button
-            onClick={handlePrint}
-            className="mt-6 px-6 py-2 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors duration-200 shadow-md"
-          >
-            导出图片
-          </button>
         </div>
       </div>
 
