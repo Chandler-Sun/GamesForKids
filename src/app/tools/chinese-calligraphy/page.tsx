@@ -1238,9 +1238,9 @@ const ChineseCalligraphy = () => {
                 alt="预览" 
                 className={`w-full md:w-[300px] h-auto object-contain ${isWeixinBrowser ? 'cursor-pointer' : ''}`}
                 onClick={() => {
-                  if (isWeixinBrowser && typeof wx !== 'undefined') {
+                  if (isWeixinBrowser && (window as any).wx) {
                     // 调用微信图片预览
-                    wx.previewImage({
+                    (window as any).wx.previewImage({
                       current: previewUrl,
                       urls: [previewUrl]
                     });
