@@ -115,6 +115,9 @@ const ChineseCalligraphy = () => {
   const [titleSize, setTitleSize] = React.useState(20);
   const [titleOffsetX, setTitleOffsetX] = React.useState(0);
   const [titleOffsetY, setTitleOffsetY] = React.useState(0);
+  const [textOffsetX, setTextOffsetX] = React.useState(0);
+  const [textOffsetY, setTextOffsetY] = React.useState(0);
+  const [isDraggingText, setIsDraggingText] = React.useState(false);
 
   // 在组件挂载后从 localStorage 加载数据
   React.useEffect(() => {
@@ -139,6 +142,8 @@ const ChineseCalligraphy = () => {
       setTitleSize(parseInt(getLocalStorage('calligraphy_titleSize', titleSize)));
       setTitleOffsetX(parseInt(getLocalStorage('calligraphy_titleOffsetX', titleOffsetX)));
       setTitleOffsetY(parseInt(getLocalStorage('calligraphy_titleOffsetY', titleOffsetY)));
+      setTextOffsetX(parseInt(getLocalStorage('calligraphy_textOffsetX', textOffsetX)));
+      setTextOffsetY(parseInt(getLocalStorage('calligraphy_textOffsetY', textOffsetY)));
     }
   }, []);
 
@@ -165,6 +170,8 @@ const ChineseCalligraphy = () => {
       localStorage.setItem('calligraphy_titleSize', titleSize.toString());
       localStorage.setItem('calligraphy_titleOffsetX', titleOffsetX.toString());
       localStorage.setItem('calligraphy_titleOffsetY', titleOffsetY.toString());
+      localStorage.setItem('calligraphy_textOffsetX', textOffsetX.toString());
+      localStorage.setItem('calligraphy_textOffsetY', textOffsetY.toString());
     }
   }, [
     isClient,
@@ -187,7 +194,9 @@ const ChineseCalligraphy = () => {
     titleText,
     titleSize,
     titleOffsetX,
-    titleOffsetY
+    titleOffsetY,
+    textOffsetX,
+    textOffsetY
   ]);
 
   // 获取 SVG 尺寸
@@ -232,23 +241,23 @@ const ChineseCalligraphy = () => {
       // 竖排布局
       switch (alignment) {
         case 'left':
-          return { x: 80 + (index * spacing), y: 60 };
+          return { x: 80 + (index * spacing) + textOffsetX, y: 60 + textOffsetY };
         case 'right':
-          return { x: (220 - totalSpace) + (index * spacing), y: 60 };
+          return { x: (220 - totalSpace) + (index * spacing) + textOffsetX, y: 60 + textOffsetY };
         case 'center':
           const startX = 150 + (totalSpace / 2);
-          return { x: startX - (index * spacing), y: 60 };
+          return { x: startX - (index * spacing) + textOffsetX, y: 60 + textOffsetY };
       }
     } else {
       // 横排布局
       switch (alignment) {
         case 'left':
-          return { x: 60, y: 80 + (index * spacing) };
+          return { x: 60 + textOffsetX, y: 80 + (index * spacing) + textOffsetY };
         case 'right':
-          return { x: 60, y: (220 - totalSpace) + (index * spacing) };
+          return { x: 60 + textOffsetX, y: (220 - totalSpace) + (index * spacing) + textOffsetY };
         case 'center':
           const startY = 150 + (totalSpace / 2);
-          return { x: 60, y: startY - (index * spacing) };
+          return { x: 60 + textOffsetX, y: startY - (index * spacing) + textOffsetY };
       }
     }
   };
@@ -654,27 +663,33 @@ const ChineseCalligraphy = () => {
   // 处理拖拽开始
   const handleElementDragStart = (
     e: React.MouseEvent | React.TouchEvent,
-    type: 'title' | 'signature'
+    type: 'title' | 'signature' | 'text'
   ) => {
     e.preventDefault();
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     
     dragStartPos.current = { x: clientX, y: clientY };
-    elementStartPos.current = type === 'title' 
-      ? { x: titleOffsetX, y: titleOffsetY }
-      : { x: signatureOffsetX, y: signatureOffsetY };
     
-    if (type === 'title') {
-      setIsDraggingTitle(true);
-    } else {
-      setIsDraggingSignature(true);
+    switch (type) {
+      case 'title':
+        elementStartPos.current = { x: titleOffsetX, y: titleOffsetY };
+        setIsDraggingTitle(true);
+        break;
+      case 'signature':
+        elementStartPos.current = { x: signatureOffsetX, y: signatureOffsetY };
+        setIsDraggingSignature(true);
+        break;
+      case 'text':
+        elementStartPos.current = { x: textOffsetX, y: textOffsetY };
+        setIsDraggingText(true);
+        break;
     }
   };
 
   // 处理拖拽过程
   const handleElementDrag = React.useCallback((e: MouseEvent | TouchEvent) => {
-    if (!isDraggingTitle && !isDraggingSignature) return;
+    if (!isDraggingTitle && !isDraggingSignature && !isDraggingText) return;
     if (!svgRef.current) return;
 
     e.preventDefault();
@@ -690,21 +705,25 @@ const ChineseCalligraphy = () => {
     if (isDraggingTitle) {
       setTitleOffsetX(elementStartPos.current.x + deltaX);
       setTitleOffsetY(elementStartPos.current.y + deltaY);
-    } else {
+    } else if (isDraggingSignature) {
       setSignatureOffsetX(elementStartPos.current.x + deltaX);
       setSignatureOffsetY(elementStartPos.current.y + deltaY);
+    } else if (isDraggingText) {
+      setTextOffsetX(elementStartPos.current.x + deltaX);
+      setTextOffsetY(elementStartPos.current.y + deltaY);
     }
-  }, [isDraggingTitle, isDraggingSignature, svgDimensions.width]);
+  }, [isDraggingTitle, isDraggingSignature, isDraggingText, svgDimensions.width]);
 
   // 处理拖拽结束
   const handleElementDragEnd = () => {
     setIsDraggingTitle(false);
     setIsDraggingSignature(false);
+    setIsDraggingText(false);
   };
 
   // 添加拖拽事件监听
   React.useEffect(() => {
-    if (isDraggingTitle || isDraggingSignature) {
+    if (isDraggingTitle || isDraggingSignature || isDraggingText) {
       window.addEventListener('mousemove', handleElementDrag);
       window.addEventListener('touchmove', handleElementDrag);
       window.addEventListener('mouseup', handleElementDragEnd);
@@ -717,7 +736,7 @@ const ChineseCalligraphy = () => {
       window.removeEventListener('mouseup', handleElementDragEnd);
       window.removeEventListener('touchend', handleElementDragEnd);
     };
-  }, [isDraggingTitle, isDraggingSignature, handleElementDrag]);
+  }, [isDraggingTitle, isDraggingSignature, isDraggingText, handleElementDrag]);
 
   // 添加微信 JS-SDK 检测函数
   const isWeixinBrowser = React.useMemo(() => {
@@ -856,6 +875,7 @@ const ChineseCalligraphy = () => {
               onChange={(e) => setLetterSpacing(Number(e.target.value))}
               className="w-full"
             />
+            <span className="text-xs text-gray-400">拖动图中文字调整位置</span>
           </div>
           
           {/* 在控制面板中添加称谓控制，放在落款控制之前 */}
@@ -1177,21 +1197,29 @@ const ChineseCalligraphy = () => {
             {sentences.map((sentence: string, index: number) => {
               const pos = getTextPosition(index, sentences.length);
               return (
-                <text 
+                <g
                   key={index}
-                  x={pos.x}
-                  y={pos.y}
-                  style={{
-                    fontSize: `${textSize}px`,
-                    fontFamily: `"${selectedFont}", cursive`,
-                    writingMode: direction === 'vertical' ? 'vertical-rl' : 'horizontal-tb',
-                    dominantBaseline: 'middle',
-                    letterSpacing: `${letterSpacing}em`,
-                    fill: textColor
-                  }}
+                  onMouseDown={(e) => handleElementDragStart(e, 'text')}
+                  onTouchStart={(e) => handleElementDragStart(e, 'text')}
+                  style={{ cursor: 'move' }}
                 >
-                  {sentence}
-                </text>
+                  <text 
+                    x={pos.x}
+                    y={pos.y}
+                    style={{
+                      fontSize: `${textSize}px`,
+                      fontFamily: `"${selectedFont}", cursive`,
+                      writingMode: direction === 'vertical' ? 'vertical-rl' : 'horizontal-tb',
+                      dominantBaseline: 'middle',
+                      letterSpacing: `${letterSpacing}em`,
+                      fill: textColor,
+                      opacity: isDraggingText ? 0.7 : 1,
+                      userSelect: 'none'
+                    }}
+                  >
+                    {sentence}
+                  </text>
+                </g>
               );
             })}
 
