@@ -624,6 +624,81 @@ const ChineseCalligraphy = () => {
     };
   }, [isDragging, handleDrag]);
 
+  // 添加拖拽相关状态
+  const [isDraggingTitle, setIsDraggingTitle] = React.useState(false);
+  const [isDraggingSignature, setIsDraggingSignature] = React.useState(false);
+  const svgRef = React.useRef<SVGSVGElement>(null);
+  const dragStartPos = React.useRef({ x: 0, y: 0 });
+  const elementStartPos = React.useRef({ x: 0, y: 0 });
+
+  // 处理拖拽开始
+  const handleElementDragStart = (
+    e: React.MouseEvent | React.TouchEvent,
+    type: 'title' | 'signature'
+  ) => {
+    e.preventDefault();
+    const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    
+    dragStartPos.current = { x: clientX, y: clientY };
+    elementStartPos.current = type === 'title' 
+      ? { x: titleOffsetX, y: titleOffsetY }
+      : { x: signatureOffsetX, y: signatureOffsetY };
+    
+    if (type === 'title') {
+      setIsDraggingTitle(true);
+    } else {
+      setIsDraggingSignature(true);
+    }
+  };
+
+  // 处理拖拽过程
+  const handleElementDrag = React.useCallback((e: MouseEvent | TouchEvent) => {
+    if (!isDraggingTitle && !isDraggingSignature) return;
+    if (!svgRef.current) return;
+
+    e.preventDefault();
+    const clientX = 'touches' in e ? (e as TouchEvent).touches[0].clientX : (e as MouseEvent).clientX;
+    const clientY = 'touches' in e ? (e as TouchEvent).touches[0].clientY : (e as MouseEvent).clientY;
+
+    const svgRect = svgRef.current.getBoundingClientRect();
+    const scale = svgDimensions.width / svgRect.width;
+    
+    const deltaX = (clientX - dragStartPos.current.x) * scale;
+    const deltaY = (clientY - dragStartPos.current.y) * scale;
+
+    if (isDraggingTitle) {
+      setTitleOffsetX(elementStartPos.current.x + deltaX);
+      setTitleOffsetY(elementStartPos.current.y + deltaY);
+    } else {
+      setSignatureOffsetX(elementStartPos.current.x + deltaX);
+      setSignatureOffsetY(elementStartPos.current.y + deltaY);
+    }
+  }, [isDraggingTitle, isDraggingSignature, svgDimensions.width]);
+
+  // 处理拖拽结束
+  const handleElementDragEnd = () => {
+    setIsDraggingTitle(false);
+    setIsDraggingSignature(false);
+  };
+
+  // 添加拖拽事件监听
+  React.useEffect(() => {
+    if (isDraggingTitle || isDraggingSignature) {
+      window.addEventListener('mousemove', handleElementDrag);
+      window.addEventListener('touchmove', handleElementDrag);
+      window.addEventListener('mouseup', handleElementDragEnd);
+      window.addEventListener('touchend', handleElementDragEnd);
+    }
+    
+    return () => {
+      window.removeEventListener('mousemove', handleElementDrag);
+      window.removeEventListener('touchmove', handleElementDrag);
+      window.removeEventListener('mouseup', handleElementDragEnd);
+      window.removeEventListener('touchend', handleElementDragEnd);
+    };
+  }, [isDraggingTitle, isDraggingSignature, handleElementDrag]);
+
   // 只在客户端渲染时显示内容
   if (!isClient) {
     return <div className="min-h-screen flex items-center justify-center">
@@ -701,7 +776,7 @@ const ChineseCalligraphy = () => {
             value={text}
             onChange={handleTextChange}
             placeholder="请输入书法文本..."
-            className="w-full h-28 p-3 rounded-lg border border-gray-200 resize-none"
+            className="w-full h-20 p-3 rounded-lg border border-gray-200 resize-none"
           />
 
 
@@ -766,6 +841,7 @@ const ChineseCalligraphy = () => {
                 onChange={(e) => setShowTitle(e.target.checked)}
                 className="rounded"
               />
+            <span className="text-xs text-gray-400">(拖动调整位置)</span>
             </div>
             
             {showTitle && (
@@ -789,34 +865,6 @@ const ChineseCalligraphy = () => {
                     className="w-full"
                   />
                 </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm text-gray-600">
-                    水平偏移: {titleOffsetX}px
-                  </label>
-                  <input
-                    type="range"
-                    min="-100"
-                    max="100"
-                    value={titleOffsetX}
-                    onChange={(e) => setTitleOffsetX(Number(e.target.value))}
-                    className="w-full"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm text-gray-600">
-                    垂直偏移: {titleOffsetY}px
-                  </label>
-                  <input
-                    type="range"
-                    min="-100"
-                    max="100"
-                    value={titleOffsetY}
-                    onChange={(e) => setTitleOffsetY(Number(e.target.value))}
-                    className="w-full"
-                  />
-                </div>
               </>
             )}
           </div>
@@ -830,6 +878,7 @@ const ChineseCalligraphy = () => {
                 onChange={(e) => setShowSignature(e.target.checked)}
                 className="rounded"
               />
+            <span className="text-xs text-gray-400">(拖动调整位置)</span>
             </div>
             
             {showSignature && (
@@ -852,34 +901,6 @@ const ChineseCalligraphy = () => {
                     max="24"
                     value={signatureSize}
                     onChange={(e) => setSignatureSize(Number(e.target.value))}
-                    className="w-full"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm text-gray-600">
-                    水平偏移: {signatureOffsetX}px
-                  </label>
-                  <input
-                    type="range"
-                    min="-100"
-                    max="100"
-                    value={signatureOffsetX}
-                    onChange={(e) => setSignatureOffsetX(Number(e.target.value))}
-                    className="w-full"
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <label className="text-sm text-gray-600">
-                    垂直偏移: {signatureOffsetY}px
-                  </label>
-                  <input
-                    type="range"
-                    min="-100"
-                    max="100"
-                    value={signatureOffsetY}
-                    onChange={(e) => setSignatureOffsetY(Number(e.target.value))}
                     className="w-full"
                   />
                 </div>
@@ -1071,6 +1092,7 @@ const ChineseCalligraphy = () => {
           h-fit
         `}>
           <svg 
+            ref={svgRef}
             id="calligraphy"
             width={svgDimensions.width} 
             height={svgDimensions.height} 
@@ -1099,25 +1121,32 @@ const ChineseCalligraphy = () => {
             
             {/* 在 SVG 中添加称谓渲染，放在主文本渲染之前 */}
             {showTitle && (
-              <text
-                x={direction === 'vertical' 
-                  ? svgDimensions.width - 50 + titleOffsetX
-                  : 60 + titleOffsetX}
-                y={direction === 'vertical'
-                  ? 60 + titleOffsetY
-                  : 60 + titleOffsetY}
-                style={{
-                  fontSize: `${titleSize}px`,
-                  fontFamily: `"${selectedFont}", cursive`,
-                  fill: textColor,
-                  opacity: 0.85,
-                  writingMode: direction === 'vertical' ? 'vertical-rl' : 'horizontal-tb',
-                  textAnchor: direction === 'vertical' ? 'start' : 'start',
-                  dominantBaseline: direction === 'vertical' ? 'hanging' : 'hanging'
-                }}
+              <g
+                onMouseDown={(e) => handleElementDragStart(e, 'title')}
+                onTouchStart={(e) => handleElementDragStart(e, 'title')}
+                style={{ cursor: 'move' }}
               >
-                {titleText}
-              </text>
+                <text
+                  x={direction === 'vertical' 
+                    ? svgDimensions.width - 50 + titleOffsetX
+                    : 60 + titleOffsetX}
+                  y={direction === 'vertical'
+                    ? 60 + titleOffsetY
+                    : 60 + titleOffsetY}
+                  style={{
+                    fontSize: `${titleSize}px`,
+                    fontFamily: `"${selectedFont}", cursive`,
+                    fill: textColor,
+                    opacity: isDraggingTitle ? 0.7 : 0.85,
+                    writingMode: direction === 'vertical' ? 'vertical-rl' : 'horizontal-tb',
+                    textAnchor: direction === 'vertical' ? 'start' : 'start',
+                    dominantBaseline: direction === 'vertical' ? 'hanging' : 'hanging',
+                    userSelect: 'none'
+                  }}
+                >
+                  {titleText}
+                </text>
+              </g>
             )}
             
             {/* 更新文字渲染 */}
@@ -1143,25 +1172,32 @@ const ChineseCalligraphy = () => {
             })}
 
             {showSignature && (
-              <text
-                x={direction === 'vertical' 
-                  ? 60 + signatureOffsetX 
-                  : svgDimensions.width - 60 + signatureOffsetX}
-                y={direction === 'vertical' 
-                  ? svgDimensions.height - 128 + signatureOffsetY 
-                  : svgDimensions.height - 60 + signatureOffsetY}
-                style={{
-                  fontSize: `${signatureSize}px`,
-                  fontFamily: `"${selectedFont}", cursive`,
-                  fill: textColor,
-                  opacity: 0.85,
-                  writingMode: direction === 'vertical' ? 'vertical-rl' : 'horizontal-tb',
-                  textAnchor: direction === 'vertical' ? 'start' : 'end',
-                  dominantBaseline: 'auto'
-                }}
+              <g
+                onMouseDown={(e) => handleElementDragStart(e, 'signature')}
+                onTouchStart={(e) => handleElementDragStart(e, 'signature')}
+                style={{ cursor: 'move' }}
               >
-                {signatureText}
-              </text>
+                <text
+                  x={direction === 'vertical' 
+                    ? 60 + signatureOffsetX 
+                    : svgDimensions.width - 60 + signatureOffsetX}
+                  y={direction === 'vertical' 
+                    ? svgDimensions.height - 128 + signatureOffsetY 
+                    : svgDimensions.height - 60 + signatureOffsetY}
+                  style={{
+                    fontSize: `${signatureSize}px`,
+                    fontFamily: `"${selectedFont}", cursive`,
+                    fill: textColor,
+                    opacity: isDraggingSignature ? 0.7 : 0.85,
+                    writingMode: direction === 'vertical' ? 'vertical-rl' : 'horizontal-tb',
+                    textAnchor: direction === 'vertical' ? 'start' : 'end',
+                    dominantBaseline: 'auto',
+                    userSelect: 'none'
+                  }}
+                >
+                  {signatureText}
+                </text>
+              </g>
             )}
           </svg>
         </div>
