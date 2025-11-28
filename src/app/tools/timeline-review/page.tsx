@@ -155,6 +155,7 @@ export default function TimelineReview() {
     return [];
   });
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
+  const [copiedEvent, setCopiedEvent] = useState<TimelineEvent | null>(null); // 剪贴板中的事件
   const [isDragging, setIsDragging] = useState(false);
   const [isAddingEvent, setIsAddingEvent] = useState(false);
   const [isDraggingEvent, setIsDraggingEvent] = useState(false); // 是否正在拖拽事件
@@ -348,6 +349,42 @@ export default function TimelineReview() {
     }
   }, [events, yearSummaries, verticalAnnotations, startYear, endYear, yearHeights]);
 
+  // 复制选中的事件
+  const copySelectedEvent = useCallback(() => {
+    if (selectedEvent) {
+      setCopiedEvent(selectedEvent);
+    }
+  }, [selectedEvent]);
+
+  // 粘贴事件
+  const pasteEvent = useCallback(() => {
+    if (!copiedEvent) return;
+    
+    // 创建新事件，使用新的 ID，保持相同时间但通过垂直偏移区分
+    const newEvent: TimelineEvent = {
+      ...copiedEvent,
+      id: Date.now().toString(),
+      // 保持相同的时间
+      startYear: copiedEvent.startYear,
+      startQuarter: copiedEvent.startQuarter,
+      startMonth: copiedEvent.startMonth,
+      // 垂直偏移30像素，避免完全重叠
+      yOffset: (copiedEvent.yOffset || 0) + 30,
+    };
+    
+    // 如果是持续事件，保持相同的结束时间
+    if (newEvent.type === 'duration' && copiedEvent.endYear && copiedEvent.endQuarter) {
+      newEvent.endYear = copiedEvent.endYear;
+      newEvent.endQuarter = copiedEvent.endQuarter;
+      newEvent.endMonth = copiedEvent.endMonth;
+    }
+    
+    const updatedEvents = [...events, newEvent];
+    setEvents(updatedEvents);
+    setSelectedEvent(newEvent);
+    saveHistory();
+  }, [copiedEvent, events, saveHistory]);
+
   // 键盘快捷键
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -357,12 +394,18 @@ export default function TimelineReview() {
       } else if ((e.metaKey || e.ctrlKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
         e.preventDefault();
         redo();
+      } else if ((e.metaKey || e.ctrlKey) && e.key === 'c' && selectedEvent) {
+        e.preventDefault();
+        copySelectedEvent();
+      } else if ((e.metaKey || e.ctrlKey) && e.key === 'v' && copiedEvent) {
+        e.preventDefault();
+        pasteEvent();
       }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [undo, redo]);
+  }, [undo, redo, selectedEvent, copiedEvent, copySelectedEvent, pasteEvent]);
 
   // 转换坐标到年份和月份（支持动态年份高度）
   const coordsToTime = (x: number, y: number) => {
@@ -1794,6 +1837,7 @@ export default function TimelineReview() {
           <li>📝 使用"年度摘要"为特定年份添加总结</li>
           <li>📍 使用"垂直标注"为时间范围添加阶段标记</li>
           <li>⌨️ 支持 Cmd/Ctrl + Z 撤销，Cmd/Ctrl + Y 重做</li>
+          <li>📋 选中事件后，支持 Cmd/Ctrl + C 复制，Cmd/Ctrl + V 粘贴</li>
           <li>💾 数据自动保存到浏览器，也可导出/导入 JSON 文件</li>
           <li>🤖 点击"AI 复盘"获取智能分析和建议</li>
         </ul>
