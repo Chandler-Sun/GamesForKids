@@ -2,7 +2,9 @@
   min-height: 100vh;
   background: linear-gradient(135deg, #F5F7FA 0%, #E8EEF4 100%);
   padding: 20px;
-  font-family: 'ChillLongCangKaiShu', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .toolbar {
@@ -22,7 +24,8 @@
   margin: 0 0 15px 0;
   font-size: 28px;
   color: #2C3E50;
-  font-weight: bold;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .toolbarSection {
@@ -42,7 +45,7 @@
   align-items: center;
   gap: 8px;
   font-size: 14px;
-  color: #555;
+  color: #444;
   font-weight: 500;
 }
 
@@ -52,7 +55,7 @@
   border: 2px solid #DDD;
   border-radius: 6px;
   font-size: 14px;
-  font-family: 'ChillLongCangKaiShu', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 .toolbarSection select {
@@ -62,7 +65,7 @@
   font-size: 14px;
   background: white;
   cursor: pointer;
-  font-family: 'ChillLongCangKaiShu', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 .colorPicker {
@@ -109,7 +112,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'ChillLongCangKaiShu', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -224,7 +227,8 @@
 .aiInsights h2 {
   margin: 0 0 20px 0;
   font-size: 24px;
-  font-weight: bold;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .aiInsights pre {
@@ -233,8 +237,8 @@
   border-radius: 8px;
   white-space: pre-wrap;
   line-height: 1.8;
-  font-family: 'ChillLongCangKaiShu', sans-serif;
-  font-size: 15px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 16px;
   margin: 0 0 20px 0;
   backdrop-filter: blur(10px);
 }
@@ -263,6 +267,7 @@
   margin: 0 0 15px 0;
   color: #2C3E50;
   font-size: 20px;
+  font-weight: 600;
 }
 
 .instructions ul {
@@ -272,32 +277,12 @@
 
 .instructions li {
   margin: 10px 0;
-  line-height: 1.6;
+  line-height: 1.8;
   color: #555;
   font-size: 15px;
 }
 
-/* 字体定义 */
-@font-face {
-  font-family: 'ChillLongCangKaiShu';
-  src: url('/fonts/ChillLongCangKaiShu_Regular.otf') format('opentype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'ChillLongCangKaiShu';
-  src: url('/fonts/ChillLongCangKaiShu_Medium.otf') format('opentype');
-  font-weight: 500;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'ChillLongCangKaiShu';
-  src: url('/fonts/ChillLongCangKaiShu_Bold.otf') format('opentype');
-  font-weight: bold;
-  font-style: normal;
-}
+/* 字体优化：使用系统默认字体以获得最佳可读性 */
 
 /* 自定义弹框样式 */
 .dialogOverlay {
@@ -355,7 +340,7 @@
   margin: 0;
   font-size: 20px;
   font-weight: bold;
-  font-family: 'ChillLongCangKaiShu', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
 .dialogBody {
@@ -364,9 +349,9 @@
 
 .dialogBody p {
   margin: 0 0 16px 0;
-  color: #555;
+  color: #444;
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .dialogInput {
@@ -375,7 +360,7 @@
   border: 2px solid #DDD;
   border-radius: 8px;
   font-size: 15px;
-  font-family: 'ChillLongCangKaiShu', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   transition: border-color 0.2s ease;
   box-sizing: border-box;
 }
@@ -392,7 +377,7 @@
   border: 2px solid #DDD;
   border-radius: 8px;
   font-size: 15px;
-  font-family: 'ChillLongCangKaiShu', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   transition: border-color 0.2s ease;
   box-sizing: border-box;
   resize: vertical;
@@ -448,7 +433,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'ChillLongCangKaiShu', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   min-width: 80px;
 }
 
