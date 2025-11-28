@@ -728,16 +728,37 @@ export default function TimelineReview() {
       });
     });
 
-    // 绘制当前拖拽的临时线
-    if (isDragging && dragStart && currentDrag && newEventType === 'duration') {
-      ctx.strokeStyle = selectedColor + '80';
-      ctx.lineWidth = 4;
-      ctx.setLineDash([5, 5]);
-      ctx.beginPath();
-      ctx.moveTo(dragStart.x, dragStart.y);
-      ctx.lineTo(currentDrag.x, currentDrag.y);
-      ctx.stroke();
-      ctx.setLineDash([]);
+    // 绘制当前拖拽的临时线（支持月份精确定位预览）
+    if (isDragging && dragStart && currentDrag) {
+      if (newEventType === 'duration') {
+        // 持续事件：绘制虚线，但起点和终点都对齐到月份位置
+        const startTime = coordsToTime(dragStart.x, dragStart.y);
+        const endTime = coordsToTime(currentDrag.x, currentDrag.y);
+        const startPos = timeToCoords(startTime.year, startTime.quarter, 0, startTime.month);
+        const endPos = timeToCoords(endTime.year, endTime.quarter, 0, endTime.month);
+        
+        ctx.strokeStyle = selectedColor + '80';
+        ctx.lineWidth = 4;
+        ctx.setLineDash([5, 5]);
+        ctx.beginPath();
+        ctx.moveTo(startPos.x, startPos.y);
+        ctx.lineTo(endPos.x, endPos.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      } else if (newEventType === 'milestone') {
+        // 里程碑事件：在月份对齐位置显示预览点
+        const previewTime = coordsToTime(currentDrag.x, currentDrag.y);
+        const previewPos = timeToCoords(previewTime.year, previewTime.quarter, 0, previewTime.month);
+        
+        ctx.fillStyle = selectedColor + '80';
+        ctx.beginPath();
+        ctx.arc(previewPos.x, previewPos.y, 8, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.strokeStyle = selectedColor;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
     }
   }, [events, yearSummaries, verticalAnnotations, startYear, endYear, yearCount, 
       isDragging, dragStart, currentDrag, newEventType, selectedColor, selectedEvent,
@@ -1306,6 +1327,7 @@ export default function TimelineReview() {
       title: '新事件',
       startYear: startTime.year,
       startQuarter: startTime.quarter,
+      startMonth: startTime.month, // 使用月份精确定位
       type: newEventType,
       category: 'default',
       color: selectedColor,
@@ -1317,6 +1339,7 @@ export default function TimelineReview() {
     if (newEventType === 'duration') {
       newEvent.endYear = endTime.year;
       newEvent.endQuarter = endTime.quarter;
+      newEvent.endMonth = endTime.month; // 使用月份精确定位
     }
     
     const updatedEvents = [...events, newEvent];
