@@ -1,0 +1,443 @@
+/* 太空飞船打字母游戏样式 */
+
+.gameArea {
+  position: relative;
+  width: 100%;
+  height: 24rem;
+  background: linear-gradient(to bottom, #1e3a8a, #7c3aed, #000000);
+  border: 2px solid #3b82f6;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background-color: white;
+  border-radius: 50%;
+  animation: twinkle 3s infinite;
+  box-shadow: 0 0 4px white;
+}
+
+@keyframes twinkle {
+  0%, 100% { 
+    opacity: 0.3; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 1; 
+    transform: scale(1.2);
+  }
+}
+
+.letter {
+  position: absolute;
+  font-size: 2.25rem;
+  font-weight: bold;
+  color: #fbbf24;
+  animation: float 2s ease-in-out infinite;
+  text-shadow: 0 0 15px #fbbf24, 0 0 30px #f59e0b;
+  filter: drop-shadow(0 0 8px #fbbf24);
+  transition: all 0.3s ease;
+}
+
+.letter:hover {
+  transform: scale(1.1) rotate(5deg);
+  text-shadow: 0 0 20px #fbbf24, 0 0 40px #f59e0b;
+}
+
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg); 
+  }
+  50% { 
+    transform: translateY(-5px) rotate(2deg); 
+  }
+}
+
+.spaceship {
+  position: absolute;
+  font-size: 3rem;
+  filter: drop-shadow(0 0 15px #3b82f6);
+  animation: hover 2s ease-in-out infinite;
+  transition: all 0.3s ease;
+}
+
+@keyframes hover {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg); 
+  }
+  50% { 
+    transform: translateY(-3px) rotate(1deg); 
+  }
+}
+
+.engineGlow {
+  position: absolute;
+  width: 2rem;
+  height: 1rem;
+  background: linear-gradient(to right, #f97316, #eab308);
+  border-radius: 50%;
+  animation: enginePulse 0.5s ease-in-out infinite;
+}
+
+@keyframes enginePulse {
+  0%, 100% { 
+    transform: scaleX(0.8); 
+    opacity: 0.6;
+  }
+  50% { 
+    transform: scaleX(1.2); 
+    opacity: 1;
+  }
+}
+
+.dangerZone {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1rem;
+  background: linear-gradient(to right, #ef4444, #ec4899);
+  opacity: 0.6;
+  animation: dangerPulse 1s ease-in-out infinite;
+}
+
+@keyframes dangerPulse {
+  0%, 100% { 
+    opacity: 0.4; 
+  }
+  50% { 
+    opacity: 0.8; 
+  }
+}
+
+.gameStats {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  font-size: 1.25rem;
+  background: linear-gradient(to right, rgba(31, 41, 55, 0.5), rgba(17, 24, 39, 0.5));
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.score {
+  color: #10b981;
+  text-shadow: 0 0 5px #10b981;
+}
+
+.highScore {
+  color: #f59e0b;
+  text-shadow: 0 0 5px #f59e0b;
+}
+
+.lives {
+  color: #ef4444;
+  text-shadow: 0 0 5px #ef4444;
+}
+
+.level {
+  color: #3b82f6;
+  text-shadow: 0 0 5px #3b82f6;
+}
+
+.combo {
+  color: #a855f7;
+  text-shadow: 0 0 5px #a855f7;
+  animation: comboGlow 0.5s ease-in-out infinite;
+}
+
+@keyframes comboGlow {
+  0%, 100% { 
+    text-shadow: 0 0 5px #a855f7; 
+  }
+  50% { 
+    text-shadow: 0 0 15px #a855f7, 0 0 25px #a855f7; 
+  }
+}
+
+.gameInstructions {
+  text-align: center;
+  margin-bottom: 2rem;
+  background: linear-gradient(to right, rgba(30, 58, 138, 0.5), rgba(124, 58, 237, 0.5));
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.gameInstructions h2 {
+  font-size: 1.875rem;
+  margin-bottom: 1rem;
+  color: #fbbf24;
+  text-shadow: 0 0 10px #fbbf24;
+}
+
+.gameInstructions p {
+  margin-bottom: 0.5rem;
+  color: #d1d5db;
+  font-size: 1.125rem;
+}
+
+.startButton {
+  background: linear-gradient(to right, #10b981, #059669);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  font-size: 1.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.startButton:hover {
+  background: linear-gradient(to right, #059669, #047857);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.gameOver {
+  text-align: center;
+  margin-bottom: 2rem;
+  background: linear-gradient(to right, rgba(239, 68, 68, 0.5), rgba(236, 72, 153, 0.5));
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.gameOver h2 {
+  font-size: 2.25rem;
+  margin-bottom: 1rem;
+  color: #ef4444;
+  text-shadow: 0 0 10px #ef4444;
+}
+
+.gameOver p {
+  font-size: 1.25rem;
+  margin-bottom: 1rem;
+  color: #f3f4f6;
+}
+
+.restartButton {
+  background: linear-gradient(to right, #3b82f6, #8b5cf6);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  font-size: 1.5rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.restartButton:hover {
+  background: linear-gradient(to right, #2563eb, #7c3aed);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.settingsPanel {
+  position: fixed;
+  top: 4rem;
+  right: 0;
+  width: 16rem;
+  background: linear-gradient(to bottom, #374151, #1f2937);
+  padding: 1rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  z-index: 40;
+  border-radius: 0 0 0 1rem;
+  border-left: 2px solid #3b82f6;
+  backdrop-filter: blur(10px);
+}
+
+.settingsPanel label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #d1d5db;
+  font-weight: 500;
+}
+
+.settingsPanel select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #4b5563;
+  border-radius: 0.25rem;
+  background: linear-gradient(to bottom, #4b5563, #374151);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.settingsPanel select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+  outline: none;
+}
+
+.settingsPanel input[type="range"] {
+  width: 100%;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, #4b5563, #6b7280);
+  outline: none;
+  -webkit-appearance: none;
+  transition: all 0.3s ease;
+}
+
+.settingsPanel input[type="range"]:hover {
+  background: linear-gradient(to right, #6b7280, #9ca3af);
+}
+
+.settingsPanel input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(to bottom, #3b82f6, #2563eb);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease;
+}
+
+.settingsPanel input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+}
+
+.settingsPanel input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(to bottom, #3b82f6, #2563eb);
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease;
+}
+
+.settingsPanel input[type="range"]::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
+}
+
+.clearHighScoreButton {
+  margin-top: 1rem;
+  background: linear-gradient(to right, #ef4444, #dc2626);
+  color: white;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  width: 100%;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.clearHighScoreButton:hover {
+  background: linear-gradient(to right, #dc2626, #b91c1c);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+.gameHint {
+  text-align: center;
+  margin-top: 1rem;
+  background: linear-gradient(to right, rgba(31, 41, 55, 0.3), rgba(17, 24, 39, 0.3));
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.gameHint p {
+  font-size: 1.125rem;
+  color: #9ca3af;
+  margin-bottom: 0.5rem;
+}
+
+/* 爆炸效果 */
+.explosion {
+  position: absolute;
+  pointer-events: none;
+}
+
+.explosionParticle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, #fbbf24, #f59e0b);
+  border-radius: 50%;
+  animation: explode 0.8s ease-out forwards;
+}
+
+@keyframes explode {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .gameStats {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+  
+  .settingsPanel {
+    width: 100%;
+    border-radius: 0;
+  }
+  
+  .gameInstructions h2 {
+    font-size: 1.5rem;
+  }
+  
+  .gameInstructions p {
+    font-size: 1rem;
+  }
+}
+
+/* 加载动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fadeIn {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* 脉冲效果 */
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+.pulse {
+  animation: pulse 2s ease-in-out infinite;
+} 

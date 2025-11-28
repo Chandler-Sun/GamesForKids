@@ -5,9 +5,11 @@ const GamesDirectory = () => {
   const items = {
     games: [
       { id: 'math-quiz-100', title: '数学练习游戏', description: '练习100以内的加减法' },
+      { id: 'space-letter-shooter', title: '太空飞船打字母', description: '射击掉落的字母，练习键盘输入' },
     ],
     tools: [
       { id: 'chinese-calligraphy', title: '文字转图片', description: '将文字转换为书法字体图片' },
+      { id: 'timeline-review', title: '时间线复盘工具', description: '基于年度时间线的可视化复盘工具，支持AI分析' },
     ]
   };
 
