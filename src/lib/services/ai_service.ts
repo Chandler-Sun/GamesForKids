@@ -59,7 +59,7 @@ export class AIService {
     const defaultOptions = {
       temperature: 0.7,
       max_tokens: 4000,
-      model: process.env.NEXT_PUBLIC_OPENROUTER_DEFAULT_MODEL || 'anthropic/claude-3.5-sonnet',
+      model: process.env.NEXT_PUBLIC_OPENROUTER_DEFAULT_MODEL || 'moonshotai/kimi-k2-thinking',
       stream: false
     };
 
@@ -117,7 +117,7 @@ export class AIService {
     const { events, yearSummaries, startYear, endYear } = params;
 
     // 构建系统提示词
-    const systemPrompt = `你是一个专业的时间线复盘分析师，擅长从历史事件中提取洞察和规律。
+    const systemPrompt = `你是一个专业的创业公司复盘分析师，擅长从历史事件中提取洞察和规律。
 你的任务是分析用户提供的时间线事件数据，生成有价值的复盘报告。
 
 报告应包含以下部分：
@@ -128,15 +128,27 @@ export class AIService {
 
 请用清晰、简洁、有洞察力的语言撰写报告。`;
 
+    // events先按开始时间排序
+    const sortedEvents = [...events].sort((a, b) => {
+      // 优先按startYear, 然后startQuarter, 然后startMonth排序
+      if (a.startYear !== b.startYear) return a.startYear - b.startYear;
+      // quarter可为空，默认1
+      const aq = a.startQuarter ?? 1, bq = b.startQuarter ?? 1;
+      if (aq !== bq) return aq - bq;
+      // month可为空，默认1
+      const am = a.startMonth ?? 1, bm = b.startMonth ?? 1;
+      return am - bm;
+    });
+
     // 构建用户消息
-    const eventsDescription = events.map(e => {
+    const eventsDescription = sortedEvents.map(e => {
       const timeInfo = e.type === 'milestone' 
         ? `${e.startYear}年${e.startMonth ? `${e.startMonth}月` : `Q${e.startQuarter || 1}`}`
         : `${e.startYear}年${e.startMonth ? `${e.startMonth}月` : `Q${e.startQuarter || 1}`} - ${e.endYear}年${e.endMonth ? `${e.endMonth}月` : `Q${e.endQuarter || 4}`}`;
       
-      const resultEmoji = e.result === 'good' ? '✓' : e.result === 'bad' ? '✗' : '○';
+      const resultEmoji = e.result === 'good' ? '算拿到还可以的结果' : e.result === 'bad' ? '没有拿到好结果' : '结果不好说';
       
-      return `${resultEmoji} [${e.type === 'milestone' ? '里程碑' : '持续事件'}] ${e.title} (${timeInfo})${e.notes ? `\n   备注: ${e.notes}` : ''}`;
+      return `[结果情况: ${resultEmoji}] [${e.category}]: ${e.title} (${timeInfo})${e.notes ? `\n   备注: ${e.notes}` : ''}`;
     }).join('\n');
 
     const summariesDescription = yearSummaries && yearSummaries.length > 0
@@ -147,10 +159,9 @@ export class AIService {
 
 共有 ${events.length} 个事件：
 ${eventsDescription}
-${summariesDescription}
 
 请生成一份全面的复盘分析报告。`;
-
+    console.log('userPrompt', userPrompt);
     const messages: OpenRouterMessage[] = [
       {
         role: 'system',
@@ -166,7 +177,7 @@ ${summariesDescription}
       const response = await this.chatCompletion({
         messages,
         temperature: 0.7,
-        max_tokens: 3000
+        max_tokens: 30000
       });
 
       const content = response.choices[0]?.message?.content || '';

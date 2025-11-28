@@ -1,0 +1,828 @@
+{
+    "events": [
+      {
+        "id": "event-2018-01",
+        "title": "解析器、推荐、ATS、邮箱简历收取",
+        "startYear": 2018,
+        "startQuarter": 1,
+        "startMonth": 1,
+        "type": "duration",
+        "category": "产品开发",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#4ECDC4",
+        "yOffset": 54.000144141992806,
+        "endYear": 2018,
+        "endQuarter": 4,
+        "endMonth": 11
+      },
+      {
+        "id": "event-2018-02",
+        "title": "Abbys Helper 猎头工具",
+        "startYear": 2019,
+        "startQuarter": 4,
+        "startMonth": 10,
+        "type": "duration",
+        "category": "产品发布",
+        "result": "bad",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#FF6B6B",
+        "yOffset": 142.13264869163748,
+        "endYear": 2019,
+        "endQuarter": 4,
+        "endMonth": 12
+      },
+      {
+        "id": "event-2019-01",
+        "title": "推荐系统1.0",
+        "startYear": 2019,
+        "startQuarter": 1,
+        "startMonth": 1,
+        "type": "duration",
+        "category": "产品开发",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#4ECDC4",
+        "yOffset": 57.000156860403905,
+        "endYear": 2019,
+        "endQuarter": 3,
+        "endMonth": 7
+      },
+      {
+        "id": "event-2019-02",
+        "title": "YJ离职",
+        "startYear": 2019,
+        "startQuarter": 3,
+        "startMonth": 8,
+        "type": "milestone",
+        "category": "人事变动",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#45B7D1",
+        "yOffset": 68.0002034945781
+      },
+      {
+        "id": "event-2019-06",
+        "title": "作为CTO负责研发(不含产品设计)",
+        "startYear": 2019,
+        "startQuarter": 4,
+        "startMonth": 10,
+        "type": "milestone",
+        "category": "组织架构",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#45B7D1",
+        "yOffset": 88.9999985775423
+      },
+      {
+        "id": "event-2019-03",
+        "title": "作为CTO接手产品",
+        "startYear": 2020,
+        "startQuarter": 1,
+        "startMonth": 2,
+        "type": "milestone",
+        "category": "业务拓展",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#52B788",
+        "yOffset": 65.99999905169489
+      },
+      {
+        "id": "event-2019-04",
+        "title": "飞书集成/腾讯HR助手",
+        "startYear": 2020,
+        "startQuarter": 1,
+        "startMonth": 3,
+        "type": "duration",
+        "category": "合作项目",
+        "result": "bad",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#FFA07A",
+        "yOffset": 120.00003765434343,
+        "endYear": 2020,
+        "endQuarter": 4,
+        "endMonth": 12
+      },
+      {
+        "id": "event-2019-05",
+        "title": "KG2.0",
+        "startYear": 2020,
+        "startQuarter": 2,
+        "startMonth": 4,
+        "type": "duration",
+        "category": "产品发布",
+        "result": "bad",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#FF6B6B",
+        "yOffset": 51.13251592753801,
+        "endYear": 2020,
+        "endQuarter": 3,
+        "endMonth": 9
+      },
+      {
+        "id": "event-2019-07",
+        "title": "猎头端",
+        "startYear": 2020,
+        "startQuarter": 4,
+        "startMonth": 10,
+        "type": "duration",
+        "category": "产品开发",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#4ECDC4",
+        "yOffset": 43.000015548566296,
+        "endYear": 2020,
+        "endQuarter": 4,
+        "endMonth": 12
+      },
+      {
+        "id": "event-2019-08",
+        "title": "小倍优选",
+        "startYear": 2020,
+        "startQuarter": 4,
+        "startMonth": 12,
+        "type": "duration",
+        "category": "产品发布",
+        "result": "bad",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#98D8C8",
+        "yOffset": 0
+      },
+      {
+        "id": "event-2020-01",
+        "title": "猎头端/人才通/人才报/组件产品",
+        "startYear": 2021,
+        "startQuarter": 1,
+        "startMonth": 1,
+        "type": "duration",
+        "category": "产品开发",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#4ECDC4",
+        "yOffset": 34.99999927846346,
+        "endYear": 2020,
+        "endQuarter": 2,
+        "endMonth": 6
+      },
+      {
+        "id": "event-2020-02",
+        "title": "360智能招聘",
+        "startYear": 2021,
+        "startQuarter": 2,
+        "startMonth": 6,
+        "type": "duration",
+        "category": "产品开发",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#45B7D1",
+        "yOffset": 118.99999960830894,
+        "endYear": 2021,
+        "endQuarter": 4,
+        "endMonth": 12
+      },
+      {
+        "id": "event-2020-03",
+        "title": "人才库及寻才1.0迭代",
+        "startYear": 2021,
+        "startQuarter": 2,
+        "startMonth": 5,
+        "type": "duration",
+        "category": "产品开发",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#F7DC6F",
+        "yOffset": 78.9999983713891,
+        "endYear": 2021,
+        "endQuarter": 4,
+        "endMonth": 12
+      },
+      {
+        "id": "event-2020-04",
+        "title": "钉钉智能招聘合作",
+        "startYear": 2021,
+        "startQuarter": 3,
+        "startMonth": 8,
+        "type": "duration",
+        "category": "合作项目",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#FFA07A",
+        "yOffset": 37.00001525995168,
+        "endYear": 2021,
+        "endQuarter": 4,
+        "endMonth": 12
+      },
+      {
+        "id": "event-2021-01",
+        "title": "社招系统补全",
+        "startYear": 2022,
+        "startQuarter": 1,
+        "startMonth": 1,
+        "type": "duration",
+        "category": "产品开发",
+        "result": "good",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#4ECDC4",
+        "yOffset": 84.99999866000371,
+        "endYear": 2022,
+        "endQuarter": 2,
+        "endMonth": 5
+      },
+      {
+        "id": "event-2021-03",
+        "title": "用人系统",
+        "startYear": 2023,
+        "startQuarter": 2,
+        "startMonth": 4,
+        "type": "duration",
+        "category": "产品发布",
+        "result": "bad",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#FF6B6B",
+        "yOffset": 135.99999719631546,
+        "endYear": 2023,
+        "endQuarter": 3,
+        "endMonth": 7
+      },
+      {
+        "id": "event-2021-04",
+        "title": "Vivo 2.0",
+        "startYear": 2023,
+        "startQuarter": 1,
+        "startMonth": 1,
+        "type": "duration",
+        "category": "合作项目",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#FFA07A",
+        "yOffset": 41.99999954646273,
+        "endYear": 2023,
+        "endQuarter": 4,
+        "endMonth": 11
+      },
+      {
+        "id": "event-2021-05",
+        "title": "1.0迭代",
+        "startYear": 2022,
+        "startQuarter": 2,
+        "startMonth": 6,
+        "type": "duration",
+        "category": "产品迭代",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#98D8C8",
+        "yOffset": 91.00037281205766,
+        "endYear": 2022,
+        "endQuarter": 4,
+        "endMonth": 12
+      },
+      {
+        "id": "event-2022-02",
+        "title": "Vivo 2.0",
+        "startYear": 2022,
+        "startQuarter": 3,
+        "startMonth": 8,
+        "type": "duration",
+        "category": "合作项目",
+        "result": "good",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#FFA07A",
+        "yOffset": 37.999999628924115,
+        "endYear": 2022,
+        "endQuarter": 4,
+        "endMonth": 12
+      },
+      {
+        "id": "event-2022-04",
+        "title": "云学堂PoC",
+        "startYear": 2022,
+        "startQuarter": 4,
+        "startMonth": 10,
+        "type": "duration",
+        "category": "产品发布",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#F7DC6F",
+        "yOffset": 134.00033371464178,
+        "endYear": 2022,
+        "endQuarter": 4,
+        "endMonth": 12
+      },
+      {
+        "id": "event-2022-05",
+        "title": "GPT应用",
+        "startYear": 2023,
+        "startQuarter": 1,
+        "startMonth": 1,
+        "type": "duration",
+        "category": "技术探索",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#BB8FCE",
+        "yOffset": 83.00015851611624,
+        "endYear": 2023,
+        "endQuarter": 3,
+        "endMonth": 7
+      },
+      {
+        "id": "event-2022-06",
+        "title": "AI面试小程序/阿里KG交付",
+        "startYear": 2023,
+        "startQuarter": 3,
+        "startMonth": 7,
+        "type": "duration",
+        "category": "人事变动",
+        "result": "bad",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#45B7D1",
+        "yOffset": 83.9997694339562,
+        "endYear": 2023,
+        "endQuarter": 4,
+        "endMonth": 11
+      },
+      {
+        "id": "event-2022-07",
+        "title": "裁员",
+        "startYear": 2023,
+        "startQuarter": 4,
+        "startMonth": 12,
+        "type": "milestone",
+        "category": "人事变动",
+        "result": "bad",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#FF6B6B",
+        "yOffset": 92.99999849508106
+      },
+      {
+        "id": "event-2022-08",
+        "title": "搬到BeePlus",
+        "startYear": 2023,
+        "startQuarter": 4,
+        "startMonth": 12,
+        "type": "milestone",
+        "category": "default",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#85C1E2",
+        "yOffset": 151.00030872120044
+      },
+      {
+        "id": "event-2023-01",
+        "title": "倍聊",
+        "startYear": 2024,
+        "startQuarter": 1,
+        "startMonth": 2,
+        "type": "duration",
+        "category": "产品开发",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#4ECDC4",
+        "yOffset": 24.999999896923327,
+        "endYear": 2024,
+        "endQuarter": 4,
+        "endMonth": 10
+      },
+      {
+        "id": "event-2023-02",
+        "title": "面试官辅助工具",
+        "startYear": 2024,
+        "startQuarter": 3,
+        "startMonth": 7,
+        "type": "duration",
+        "category": "产品开发",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#45B7D1",
+        "yOffset": 94.00000864386288,
+        "endYear": 2024,
+        "endQuarter": 4,
+        "endMonth": 12
+      },
+      {
+        "id": "event-2023-03",
+        "title": "OPPO AI面试",
+        "startYear": 2025,
+        "startQuarter": 2,
+        "startMonth": 5,
+        "type": "duration",
+        "category": "合作项目",
+        "result": "bad",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#FFA07A",
+        "yOffset": 121.0001342405942,
+        "endYear": 2025,
+        "endQuarter": 3,
+        "endMonth": 8
+      },
+      {
+        "id": "event-2023-04",
+        "title": "6.6内部人才库启动",
+        "startYear": 2025,
+        "startQuarter": 2,
+        "startMonth": 6,
+        "type": "duration",
+        "category": "内部项目",
+        "result": "good",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#52B788",
+        "yOffset": 51.00019669196479,
+        "endYear": 2025,
+        "endQuarter": 4,
+        "endMonth": 12
+      },
+      {
+        "id": "event-2023-05",
+        "title": "7.19发布会",
+        "startYear": 2024,
+        "startQuarter": 3,
+        "startMonth": 7,
+        "type": "milestone",
+        "category": "产品发布",
+        "result": "good",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#FF6B6B",
+        "yOffset": 159.99997746265126
+      },
+      {
+        "id": "event-2023-06",
+        "title": "8.12支付宝就业",
+        "startYear": 2025,
+        "startQuarter": 3,
+        "startMonth": 8,
+        "type": "duration",
+        "category": "合作项目",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#F7DC6F",
+        "yOffset": 154.00022893140044,
+        "endYear": 2025,
+        "endQuarter": 4,
+        "endMonth": 12
+      },
+      {
+        "id": "event-2022-chatgpt",
+        "title": "Chat GPT 发布",
+        "startYear": 2022,
+        "startQuarter": 4,
+        "startMonth": 12,
+        "type": "milestone",
+        "category": "技术突破",
+        "result": "neutral",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#BB8FCE",
+        "yOffset": 200.9999966809321
+      },
+      {
+        "id": "event-2025-01",
+        "title": "AI面试官辅助工具",
+        "startYear": 2025,
+        "startQuarter": 1,
+        "startMonth": 1,
+        "type": "duration",
+        "category": "产品开发",
+        "result": "bad",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#45B7D1",
+        "yOffset": 48.99999898984879,
+        "endYear": 2025,
+        "endQuarter": 2,
+        "endMonth": 4
+      },
+      {
+        "id": "1764337995405",
+        "title": "云学堂PoC",
+        "startYear": 2023,
+        "startQuarter": 1,
+        "startMonth": 1,
+        "type": "duration",
+        "category": "产品发布",
+        "result": "bad",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#F7DC6F",
+        "yOffset": 122.99991267490702,
+        "endYear": 2023,
+        "endQuarter": 1,
+        "endMonth": 3
+      },
+      {
+        "id": "1764338026265",
+        "title": "钉钉智能招聘合作",
+        "startYear": 2022,
+        "startQuarter": 1,
+        "startMonth": 1,
+        "type": "duration",
+        "category": "合作项目",
+        "result": "bad",
+        "position": {
+          "x": 0,
+          "y": 0
+        },
+        "color": "#FFA07A",
+        "yOffset": 41.99999954646273,
+        "endYear": 2022,
+        "endQuarter": 3,
+        "endMonth": 7
+      },
+      {
+        "id": "1764338377693",
+        "title": "解析器/邮箱收取/KG等基础服务",
+        "startYear": 2019,
+        "startQuarter": 1,
+        "startMonth": 1,
+        "type": "duration",
+        "category": "default",
+        "color": "#98D8C8",
+        "position": {
+          "x": 213,
+          "y": 258.49999467093755
+        },
+        "result": "neutral",
+        "yOffset": 117.50004169104716,
+        "endYear": 2019,
+        "endQuarter": 3,
+        "endMonth": 9
+      },
+      {
+        "id": "1764338435202",
+        "title": "创新工场",
+        "startYear": 2018,
+        "startQuarter": 1,
+        "startMonth": 1,
+        "type": "milestone",
+        "category": "default",
+        "color": "#98D8C8",
+        "position": {
+          "x": 254,
+          "y": 95.49999803123612
+        },
+        "result": "neutral",
+        "yOffset": 24.999999896923356
+      },
+      {
+        "id": "1764338473778",
+        "title": "储能大厦",
+        "startYear": 2019,
+        "startQuarter": 4,
+        "startMonth": 10,
+        "type": "milestone",
+        "category": "default",
+        "color": "#98D8C8",
+        "position": {
+          "x": 641,
+          "y": 183.4999962170872
+        },
+        "result": "neutral",
+        "yOffset": 39.999999587693424
+      },
+      {
+        "id": "1764338700892",
+        "title": "小倍优选",
+        "startYear": 2020,
+        "startQuarter": 4,
+        "startMonth": 10,
+        "type": "duration",
+        "category": "产品开发",
+        "color": "#FF6B6B",
+        "position": {
+          "x": 889,
+          "y": 462.4999904654107
+        },
+        "result": "bad",
+        "yOffset": 92.235241949081,
+        "endYear": 2020,
+        "endQuarter": 4,
+        "endMonth": 12
+      },
+      {
+        "id": "1764339155069",
+        "title": "2.0迭代",
+        "startYear": 2024,
+        "startQuarter": 1,
+        "startMonth": 1,
+        "type": "duration",
+        "category": "产品开发",
+        "color": "#98D8C8",
+        "position": {
+          "x": 213,
+          "y": 1158.4999761171428
+        },
+        "result": "neutral",
+        "yOffset": 61.23438280837718,
+        "endYear": 2024,
+        "endQuarter": 4,
+        "endMonth": 12
+      },
+      {
+        "id": "1764339410717",
+        "title": "vivo二期",
+        "startYear": 2025,
+        "startQuarter": 1,
+        "startMonth": 1,
+        "type": "duration",
+        "category": "default",
+        "color": "#FF6B6B",
+        "position": {
+          "x": 206,
+          "y": 1387.0058801454124
+        },
+        "result": "bad",
+        "yOffset": 88.88941091393804,
+        "endYear": 2025,
+        "endQuarter": 2,
+        "endMonth": 5
+      },
+      {
+        "id": "1764339791754",
+        "title": "360 三期",
+        "startYear": 2024,
+        "startQuarter": 4,
+        "startMonth": 10,
+        "type": "duration",
+        "category": "产品开发",
+        "color": "#45B7D1",
+        "position": {
+          "x": 868,
+          "y": 1202.0050958433928
+        },
+        "result": "neutral",
+        "yOffset": 144.8888626822627,
+        "endYear": 2024,
+        "endQuarter": 4,
+        "endMonth": 12
+      },
+      {
+        "id": "1764339858984",
+        "title": "活水系统",
+        "startYear": 2023,
+        "startQuarter": 1,
+        "startMonth": 1,
+        "type": "milestone",
+        "category": "业务拓展",
+        "color": "#FF6B6B",
+        "position": {
+          "x": 217,
+          "y": 1025.0043454571362
+        },
+        "result": "bad",
+        "yOffset": 174.88841175488335
+      }
+    ],
+    "yearSummaries": [
+      {
+        "year": 2018,
+        "text": "产品基础建设年"
+      },
+      {
+        "year": 2019,
+        "text": "基础探索\n产品探索(猎头业务倾向)"
+      },
+      {
+        "year": 2020,
+        "text": "疫情开始\n轻量ATS 渠道合作探索"
+      },
+      {
+        "year": 2021,
+        "text": "多客户交付(组件为主)\n组件化产品规划迭代\n钉钉智能招聘带来精力分散\n和技术栈分散"
+      },
+      {
+        "year": 2022,
+        "text": "疫情放开\n钉钉合作失败\nvivo合作开始\n第二次技术栈分裂和产品分裂"
+      },
+      {
+        "year": 2023,
+        "text": "AI应用起步年\n探索GPT应用\nvivo项目结束, 年底裁员"
+      },
+      {
+        "year": 2024,
+        "text": "AI探索期\n7.19发布会"
+      },
+      {
+        "year": 2025,
+        "text": "AI落地期\nOPPO单向AI面试\n内部人才库项目\n支付宝合作"
+      }
+    ],
+    "verticalAnnotations": [
+      {
+        "id": "annotation-2020-2022",
+        "startYear": 2020,
+        "endYear": 2022,
+        "text": "三年特殊期",
+        "color": "#FF6B6B"
+      },
+      {
+        "id": "annotation-2022-2023",
+        "startYear": 2023,
+        "endYear": 2025,
+        "text": "AI探索期",
+        "color": "#BB8FCE"
+      },
+      {
+        "id": "1764337838997",
+        "startYear": 2018,
+        "endYear": 2019,
+        "text": "基础技术探索",
+        "color": "#98D8C8"
+      }
+    ],
+    "startYear": 2018,
+    "endYear": 2025
+  }

@@ -314,9 +314,14 @@
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   min-width: 400px;
-  max-width: 500px;
-  overflow: hidden;
+  max-width: 90vw;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  overflow-x: hidden;
   animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes scaleIn {
@@ -391,8 +396,8 @@
 }
 
 .formFields {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
 
@@ -400,6 +405,11 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+/* 某些字段需要占满整行 */
+.formField.fullWidth {
+  grid-column: 1 / -1;
 }
 
 .formLabel {
@@ -502,6 +512,52 @@
     min-width: 90%;
     max-width: 90%;
     margin: 0 20px;
+  }
+  
+  /* 在中等屏幕上，表单改为单列 */
+  .formFields {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 小屏幕响应式 */
+@media (max-width: 768px) {
+  .dialogBox {
+    min-width: 95%;
+    max-width: 95%;
+    margin: 0 10px;
+    max-height: 95vh;
+  }
+  
+  .formFields {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .dialogBody {
+    padding: 20px;
+  }
+  
+  .dialogHeader {
+    padding: 16px 20px;
+  }
+  
+  .dialogFooter {
+    padding: 12px 20px;
+    flex-wrap: wrap;
+  }
+  
+  .dialogBtn {
+    min-width: 70px;
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+}
+
+/* 大屏幕优化 */
+@media (min-width: 1200px) {
+  .dialogBox {
+    max-width: 800px;
   }
 }
 

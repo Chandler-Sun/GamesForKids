@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import styles from './page.module.css';
 import aiService from '@/lib/services/ai_service';
 
@@ -23,10 +23,11 @@ interface DialogConfig {
 interface FormField {
   name: string;
   label: string;
-  type: 'text' | 'number' | 'textarea';
+  type: 'text' | 'number' | 'textarea' | 'select';
   defaultValue?: string;
   placeholder?: string;
   required?: boolean;
+  options?: { value: string; label: string }[]; // 用于 select 类型
 }
 
 interface FormData {
@@ -76,6 +77,26 @@ const COLORS = [
 ];
 
 const QUARTERS = ['Q1', 'Q2', 'Q3', 'Q4'];
+
+// Category 到图标的映射
+const getCategoryIcon = (category: string): string => {
+  const iconMap: { [key: string]: string } = {
+    '产品开发': '🔧',
+    '产品发布': '🚀',
+    '产品迭代': '🔄',
+    '人事变动': '👥',
+    '组织架构': '🏢',
+    '业务拓展': '📈',
+    '合作项目': '🤝',
+    '技术探索': '🔬',
+    '技术突破': '💥',
+    '内部项目': '🏠',
+    '其他': '⚪',
+    'default': '📍'
+  };
+  
+  return iconMap[category] || iconMap['default'];
+};
 
 export default function TimelineReview() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -210,9 +231,52 @@ export default function TimelineReview() {
   const yearSummaryWidth = 180; // 年度摘要区域宽度（较窄）
 
   // 获取年份高度（如果自定义则使用自定义值，否则使用基础高度）
-  const getYearHeight = (year: number) => {
+  const getYearHeight = useCallback((year: number) => {
     return yearHeights[year] || baseYearHeight;
-  };
+  }, [yearHeights]);
+
+  // 画布高度状态（支持持久化）
+  const [savedCanvasHeight, setSavedCanvasHeight] = useState<number | null>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('timeline-review-data');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          return data.canvasHeight || null;
+        } catch (e) {
+          console.error('Failed to load canvasHeight', e);
+        }
+      }
+    }
+    return null;
+  });
+
+  // 计算画布总高度（支持动态年份高度）
+  const canvasHeight = useMemo(() => {
+    // 如果有保存的高度，且年份范围没有变化，使用保存的高度
+    if (savedCanvasHeight !== null) {
+      // 验证保存的高度是否仍然合理（基于当前的年份高度）
+      let calculatedHeight = topMargin;
+      for (let year = startYear; year <= endYear; year++) {
+        calculatedHeight += getYearHeight(year);
+      }
+      calculatedHeight += 200;
+      const minHeight = Math.max(800, calculatedHeight);
+      
+      // 如果保存的高度仍然合理（不小于计算的最小高度），使用保存的高度
+      if (savedCanvasHeight >= minHeight) {
+        return savedCanvasHeight;
+      }
+    }
+    
+    // 否则重新计算
+    let totalHeight = topMargin;
+    for (let year = startYear; year <= endYear; year++) {
+      totalHeight += getYearHeight(year);
+    }
+    totalHeight += 200;
+    return Math.max(800, totalHeight);
+  }, [startYear, endYear, getYearHeight, savedCanvasHeight, topMargin]);
 
   // 年份分割线拖动状态
   const [isDraggingYearLine, setIsDraggingYearLine] = useState(false);
@@ -336,6 +400,11 @@ export default function TimelineReview() {
     }
   }, [history, historyIndex]);
 
+  // 当画布高度变化时，更新保存的高度
+  useEffect(() => {
+    setSavedCanvasHeight(canvasHeight);
+  }, [canvasHeight]);
+
   // 自动保存到 localStorage
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -345,11 +414,12 @@ export default function TimelineReview() {
         verticalAnnotations,
         startYear,
         endYear,
-        yearHeights
+        yearHeights,
+        canvasHeight: savedCanvasHeight || canvasHeight
       };
       localStorage.setItem('timeline-review-data', JSON.stringify(data));
     }
-  }, [events, yearSummaries, verticalAnnotations, startYear, endYear, yearHeights]);
+  }, [events, yearSummaries, verticalAnnotations, startYear, endYear, yearHeights, canvasHeight, savedCanvasHeight]);
 
   // 复制选中的事件
   const copySelectedEvent = useCallback(() => {
@@ -387,30 +457,86 @@ export default function TimelineReview() {
     saveHistory();
   }, [copiedEvent, events, saveHistory]);
 
-  // 键盘快捷键
+  // 键盘快捷键和全局事件监听
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey) {
+      // ESC键取消拖动
+      if (e.key === 'Escape') {
+        if (isDragging || isDraggingEvent || isDraggingYearLine) {
+          e.preventDefault();
+          // 取消拖动，恢复到拖动前的状态
+          setIsDragging(false);
+          setIsDraggingEvent(false);
+          setIsDraggingYearLine(false);
+          setDragStart(null);
+          setCurrentDrag(null);
+          setDraggedEvent(null);
+          setDraggedYearLine(null);
+          setDragMode(null);
+          // 如果是添加事件模式，也退出
+          if (isAddingEvent) {
+            setIsAddingEvent(false);
+          }
+        }
+      } else if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey && !dialog) {
+        // 撤销：仅在画布界面有效，对话框打开时无效
         e.preventDefault();
         undo();
-      } else if ((e.metaKey || e.ctrlKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+      } else if ((e.metaKey || e.ctrlKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey)) && !dialog) {
+        // 重做：仅在画布界面有效，对话框打开时无效
         e.preventDefault();
         redo();
-      } else if ((e.metaKey || e.ctrlKey) && e.key === 'c' && selectedEvent) {
+      } else if ((e.metaKey || e.ctrlKey) && e.key === 'c' && selectedEvent && !dialog) {
+        // 复制：仅在画布界面有效，对话框打开时无效
         e.preventDefault();
         copySelectedEvent();
-      } else if ((e.metaKey || e.ctrlKey) && e.key === 'v' && copiedEvent) {
+      } else if ((e.metaKey || e.ctrlKey) && e.key === 'v' && copiedEvent && !dialog) {
+        // 粘贴：仅在画布界面有效，对话框打开时无效
         e.preventDefault();
         pasteEvent();
       }
     };
     
+    // 全局mouseup监听，确保即使鼠标移出画布也能正确结束拖动
+    const handleGlobalMouseUp = () => {
+      if (isDraggingYearLine && draggedYearLine !== null) {
+        setIsDraggingYearLine(false);
+        setDraggedYearLine(null);
+        setYearLineDragStartY(0);
+        setYearLineDragStartHeight(0);
+        saveHistory();
+      } else if (isDraggingEvent) {
+        setIsDraggingEvent(false);
+        setDraggedEvent(null);
+        setDragMode(null);
+        setDragStartX(0);
+        setDragStartY(0);
+        setDragStartYOffset(0);
+        setDragStartTime(null);
+        setDragStartMouseTime(null);
+        setDragEndTime(null);
+        saveHistory();
+      } else if (isDragging && dragStart) {
+        // 创建新事件的拖动完成（只在画布内部处理）
+        setIsDragging(false);
+        setDragStart(null);
+        setCurrentDrag(null);
+      }
+    };
+    
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [undo, redo, selectedEvent, copiedEvent, copySelectedEvent, pasteEvent]);
+    document.addEventListener('mouseup', handleGlobalMouseUp);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mouseup', handleGlobalMouseUp);
+    };
+  }, [undo, redo, selectedEvent, copiedEvent, copySelectedEvent, pasteEvent, 
+      isDragging, isDraggingEvent, isDraggingYearLine, dragStart, draggedYearLine,
+      isAddingEvent, saveHistory, dialog]);
 
   // 转换坐标到年份和月份（支持动态年份高度）
-  const coordsToTime = (x: number, y: number) => {
+  const coordsToTime = useCallback((x: number, y: number) => {
     let currentY = topMargin;
     let yearIndex = 0;
     
@@ -437,23 +563,11 @@ export default function TimelineReview() {
     const quarter = Math.ceil(month / 3);
     
     return { year, quarter, month };
-  };
-
-
-  // 计算画布总高度（支持动态年份高度）
-  const calculateCanvasHeight = useCallback(() => {
-    let totalHeight = topMargin;
-    for (let year = startYear; year <= endYear; year++) {
-      totalHeight += getYearHeight(year);
-    }
-    totalHeight += 200;
-    return Math.max(800, totalHeight);
-  }, [startYear, endYear, yearHeights]);
-
-  const canvasHeight = calculateCanvasHeight();
+  }, [startYear, endYear, getYearHeight]);
 
   // 转换年份和月份到坐标（基础位置，支持动态年份高度）
-  const timeToBaseCoords = (year: number, quarter: number, month?: number) => {
+  // 返回年份顶部位置（而不是中心），以便yOffset相对于顶部保持不变
+  const timeToBaseCoords = useCallback((year: number, quarter: number, month?: number) => {
     const yearIndex = year - startYear;
     
     // 如果提供了月份，使用月份计算更精确的位置
@@ -467,22 +581,24 @@ export default function TimelineReview() {
       x = leftMargin + (quarter - 1) * quarterWidth + quarterWidth / 2;
     }
     
-    // 计算该年份之前的累计高度
+    // 计算该年份之前的累计高度（年份顶部位置）
     let y = topMargin;
     for (let yIdx = 0; yIdx < yearIndex; yIdx++) {
       y += getYearHeight(startYear + yIdx);
     }
-    // 加上当前年份的一半高度
-    y += getYearHeight(year) / 2;
+    // 不再加上年份的一半高度，直接返回顶部位置
+    // yOffset 将相对于这个顶部位置计算
     
     return { x, y };
-  };
+  }, [startYear, getYearHeight]);
 
   // 转换年份和季度/月份到坐标（考虑yOffset）
-  const timeToCoords = (year: number, quarter: number, yOffset: number = 0, month?: number) => {
+  // yOffset 现在相对于年份顶部（起始线）计算，而不是中心
+  const timeToCoords = useCallback((year: number, quarter: number, yOffset: number = 0, month?: number) => {
     const base = timeToBaseCoords(year, quarter, month);
+    // yOffset 直接加到年份顶部位置
     return { x: base.x, y: base.y + yOffset };
-  };
+  }, [timeToBaseCoords]);
 
   // 绘制时间线
   const drawTimeline = useCallback(() => {
@@ -520,10 +636,13 @@ export default function TimelineReview() {
       ctx.textAlign = 'right';
       ctx.fillText(year.toString(), leftMargin - 20, currentY + 5);
       
-      // 横线（年份分割线，可拖动）
-      const isHighlighted = (isDraggingYearLine && draggedYearLine === year) || hoveredYearLine === year;
-      ctx.strokeStyle = isHighlighted ? '#4A90E2' : '#DDD';
-      ctx.lineWidth = isHighlighted ? 3 : 1;
+      // 横线（年份顶部分割线）
+      // 如果上一年正在被拖动/悬停，高亮这条线（因为这条线是上一年的底部线）
+      const prevYear = year - 1;
+      const isTopLineHighlighted = prevYear >= startYear && 
+        ((isDraggingYearLine && draggedYearLine === prevYear) || hoveredYearLine === prevYear);
+      ctx.strokeStyle = isTopLineHighlighted ? '#4A90E2' : '#DDD';
+      ctx.lineWidth = isTopLineHighlighted ? 3 : 1;
       ctx.beginPath();
       ctx.moveTo(leftMargin, currentY);
       ctx.lineTo(leftMargin + quarterWidth * 4, currentY);
@@ -536,11 +655,18 @@ export default function TimelineReview() {
       currentY += yearHeight;
     }
     
-    // 绘制最后一条横线
+    // 绘制最后一条横线（最后一年的底部线）
+    const isLastLineHighlighted = (isDraggingYearLine && draggedYearLine === endYear) || hoveredYearLine === endYear;
+    ctx.strokeStyle = isLastLineHighlighted ? '#4A90E2' : '#DDD';
+    ctx.lineWidth = isLastLineHighlighted ? 3 : 1;
     ctx.beginPath();
     ctx.moveTo(leftMargin, currentY);
     ctx.lineTo(leftMargin + quarterWidth * 4, currentY);
     ctx.stroke();
+    
+    // 重置样式
+    ctx.strokeStyle = '#DDD';
+    ctx.lineWidth = 1;
 
     // 绘制季度标签
     ctx.font = '16px "ChillLongCangKaiShu", sans-serif';
@@ -595,34 +721,47 @@ export default function TimelineReview() {
       const yOffset = event.yOffset || 0;
       
       if (event.type === 'duration' && event.endYear && event.endQuarter) {
-        // 绘制持续性事件（带箭头的线）- 确保线条水平
+        // 绘制持续性事件（带箭头的线）- 支持跨年份
         const start = timeToCoords(event.startYear, event.startQuarter, yOffset, event.startMonth);
         const end = timeToCoords(event.endYear, event.endQuarter, yOffset, event.endMonth);
+        const categoryIcon = getCategoryIcon(event.category);
         
-        // 强制保持水平：使用start的Y坐标
-        const lineY = start.y;
+        // 检查是否跨年份
+        const isCrossYear = event.startYear !== event.endYear;
+        
+        // 计算箭头方向（从起点指向终点）
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const angle = Math.atan2(dy, dx);
         const arrowSize = isSelected ? 14 : 12;
         
         // 计算主线的结束点（缩短以便箭头覆盖）
-        const lineEndX = end.x - arrowSize * 0.7;
+        const lineEndX = end.x - arrowSize * 0.7 * Math.cos(angle);
+        const lineEndY = end.y - arrowSize * 0.7 * Math.sin(angle);
         
         // 如果选中，先绘制高亮背景
         if (isSelected) {
           ctx.strokeStyle = event.color + '40';
           ctx.lineWidth = 12;
           ctx.beginPath();
-          ctx.moveTo(start.x, lineY);
-          ctx.lineTo(lineEndX, lineY);
+          ctx.moveTo(start.x, start.y);
+          ctx.lineTo(lineEndX, lineEndY);
           ctx.stroke();
         }
         
-        // 绘制水平线
+        // 绘制线条（支持跨年份的斜线）
         ctx.strokeStyle = event.color;
         ctx.lineWidth = isSelected ? 5 : 4;
         ctx.beginPath();
-        ctx.moveTo(start.x, lineY);
-        ctx.lineTo(lineEndX, lineY);
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(lineEndX, lineEndY);
         ctx.stroke();
+        
+        // 绘制Category图标（在起点上方）
+        ctx.font = `${isSelected ? '20px' : '18px'} sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(categoryIcon, start.x, start.y - (isSelected ? 30 : 28));
         
         // 如果选中，绘制可拖动的端点（起点和终点）
         if (isSelected) {
@@ -631,13 +770,13 @@ export default function TimelineReview() {
           ctx.strokeStyle = event.color;
           ctx.lineWidth = 3;
           ctx.beginPath();
-          ctx.arc(start.x, lineY, 8, 0, Math.PI * 2);
+          ctx.arc(start.x, start.y, 8, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
           
           // 绘制终点控制点（箭头位置）
           ctx.beginPath();
-          ctx.arc(end.x, lineY, 8, 0, Math.PI * 2);
+          ctx.arc(end.x, end.y, 8, 0, Math.PI * 2);
           ctx.fill();
           ctx.stroke();
         }
@@ -646,29 +785,38 @@ export default function TimelineReview() {
         if (isSelected) {
           ctx.fillStyle = event.color + '40';
           const bgArrowSize = arrowSize + 4;
+          ctx.save();
+          ctx.translate(end.x, end.y);
+          ctx.rotate(angle);
           ctx.beginPath();
-          ctx.moveTo(end.x, lineY);
-          ctx.lineTo(end.x - bgArrowSize, lineY - bgArrowSize * Math.sin(Math.PI / 6));
-          ctx.lineTo(end.x - bgArrowSize, lineY + bgArrowSize * Math.sin(Math.PI / 6));
+          ctx.moveTo(0, 0);
+          ctx.lineTo(-bgArrowSize, -bgArrowSize * Math.sin(Math.PI / 6));
+          ctx.lineTo(-bgArrowSize, bgArrowSize * Math.sin(Math.PI / 6));
           ctx.closePath();
           ctx.fill();
+          ctx.restore();
         }
         
-        // 绘制主箭头（水平向右）
+        // 绘制主箭头（指向终点方向）
         ctx.fillStyle = event.color;
+        ctx.save();
+        ctx.translate(end.x, end.y);
+        ctx.rotate(angle);
         ctx.beginPath();
-        ctx.moveTo(end.x, lineY);
-        ctx.lineTo(end.x - arrowSize, lineY - arrowSize * Math.sin(Math.PI / 6));
-        ctx.lineTo(end.x - arrowSize, lineY + arrowSize * Math.sin(Math.PI / 6));
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-arrowSize, -arrowSize * Math.sin(Math.PI / 6));
+        ctx.lineTo(-arrowSize, arrowSize * Math.sin(Math.PI / 6));
         ctx.closePath();
         ctx.fill();
+        ctx.restore();
         
         // 绘制文本
         ctx.font = `${isSelected ? 'bold 16px' : 'bold 14px'} "ChillLongCangKaiShu", sans-serif`;
         ctx.fillStyle = event.color;
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
         const midX = (start.x + end.x) / 2;
-        const midY = lineY - 10;
+        const midY = (start.y + end.y) / 2 - 10;
         
         // 如果选中，添加背景
         if (isSelected) {
@@ -682,19 +830,20 @@ export default function TimelineReview() {
         
         ctx.fillText(event.title, midX, midY);
         
-        // 结果标记
+        // 结果标记（在终点附近）
         if (event.result === 'good') {
           ctx.fillStyle = '#52B788';
           ctx.font = 'bold 18px sans-serif';
-          ctx.fillText('✓', end.x + 20, lineY);
+          ctx.fillText('✓', end.x + 20 * Math.cos(angle), end.y + 20 * Math.sin(angle));
         } else if (event.result === 'bad') {
           ctx.fillStyle = '#FF6B6B';
           ctx.font = 'bold 18px sans-serif';
-          ctx.fillText('✗', end.x + 20, lineY);
+          ctx.fillText('✗', end.x + 20 * Math.cos(angle), end.y + 20 * Math.sin(angle));
         }
       } else if (event.type === 'milestone') {
-        // 绘制里程碑事件（圆点）
+        // 绘制里程碑事件（圆点 + 图标）
         const pos = timeToCoords(event.startYear, event.startQuarter, yOffset, event.startMonth);
+        const categoryIcon = getCategoryIcon(event.category);
         
         // 如果选中，先绘制高亮外圈
         if (isSelected) {
@@ -713,17 +862,24 @@ export default function TimelineReview() {
         ctx.lineWidth = isSelected ? 3 : 2;
         ctx.stroke();
         
+        // 绘制Category图标（在圆点上方）
+        ctx.font = `${isSelected ? '20px' : '18px'} sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(categoryIcon, pos.x, pos.y - (isSelected ? 35 : 32));
+        
         // 文本
         ctx.font = `${isSelected ? 'bold 16px' : 'bold 14px'} "ChillLongCangKaiShu", sans-serif`;
         ctx.fillStyle = event.color;
         ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
         
         // 如果选中，添加背景
         if (isSelected) {
           ctx.save();
           const textMetrics = ctx.measureText(event.title);
           ctx.fillStyle = '#FFF';
-          ctx.fillRect(pos.x - textMetrics.width / 2 - 5, pos.y - 30, textMetrics.width + 10, 24);
+          ctx.fillRect(pos.x - textMetrics.width / 2 - 5, pos.y - 15, textMetrics.width + 10, 24);
           ctx.fillStyle = event.color;
           ctx.restore();
         }
@@ -805,42 +961,69 @@ export default function TimelineReview() {
         ctx.stroke();
       }
     }
+
+    // 绘制resize模式的预览反馈
+    if (isDraggingEvent && draggedEvent && (dragMode === 'resize-start' || dragMode === 'resize-end')) {
+      const currentEvent = events.find(ev => ev.id === draggedEvent.id);
+      if (currentEvent && currentEvent.type === 'duration' && currentEvent.endYear && currentEvent.endQuarter) {
+        const yOffset = currentEvent.yOffset || 0;
+        const start = timeToCoords(currentEvent.startYear, currentEvent.startQuarter, yOffset, currentEvent.startMonth);
+        const end = timeToCoords(currentEvent.endYear, currentEvent.endQuarter, yOffset, currentEvent.endMonth);
+        
+        // 绘制虚线预览，显示调整后的位置（支持跨年份）
+        ctx.strokeStyle = currentEvent.color + '60';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([8, 4]);
+        ctx.beginPath();
+        ctx.moveTo(start.x, start.y);
+        ctx.lineTo(end.x, end.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // 在正在调整的端点上绘制脉动效果
+        const pulsePoint = dragMode === 'resize-start' ? start : end;
+        ctx.fillStyle = currentEvent.color + '40';
+        ctx.beginPath();
+        ctx.arc(pulsePoint.x, pulsePoint.y, 14, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
   }, [events, yearSummaries, verticalAnnotations, startYear, endYear, yearCount, 
       isDragging, dragStart, currentDrag, newEventType, selectedColor, selectedEvent,
-      yearHeights, isDraggingYearLine, draggedYearLine, hoveredYearLine]);
+      getYearHeight, timeToCoords, coordsToTime, isDraggingYearLine, draggedYearLine, hoveredYearLine, 
+      isDraggingEvent, draggedEvent, dragMode]);
 
   useEffect(() => {
     drawTimeline();
   }, [drawTimeline]);
 
   // 检查点击是否在事件的端点上（用于调整长度）
-  const getEventHandleAtPoint = (x: number, y: number, event: TimelineEvent): 'start' | 'end' | null => {
+  const getEventHandleAtPoint = useCallback((x: number, y: number, event: TimelineEvent): 'start' | 'end' | null => {
     const yOffset = event.yOffset || 0;
     const handleRadius = 10; // 端点检测半径
     
     if (event.type === 'duration' && event.endYear && event.endQuarter) {
       const start = timeToCoords(event.startYear, event.startQuarter, yOffset, event.startMonth);
       const end = timeToCoords(event.endYear, event.endQuarter, yOffset, event.endMonth);
-      const lineY = start.y;
       
-      // 检查是否点击在起点
-      const startDistance = Math.sqrt(Math.pow(x - start.x, 2) + Math.pow(y - lineY, 2));
+      // 检查是否点击在起点（使用实际坐标，支持跨年份）
+      const startDistance = Math.sqrt(Math.pow(x - start.x, 2) + Math.pow(y - start.y, 2));
       if (startDistance < handleRadius) {
         return 'start';
       }
       
-      // 检查是否点击在终点（箭头位置）
-      const endDistance = Math.sqrt(Math.pow(x - end.x, 2) + Math.pow(y - lineY, 2));
+      // 检查是否点击在终点（箭头位置，使用实际坐标，支持跨年份）
+      const endDistance = Math.sqrt(Math.pow(x - end.x, 2) + Math.pow(y - end.y, 2));
       if (endDistance < handleRadius) {
         return 'end';
       }
     }
     
     return null;
-  };
+  }, [timeToCoords]);
 
   // 检查点击是否在事件上
-  const getEventAtPoint = (x: number, y: number): TimelineEvent | null => {
+  const getEventAtPoint = useCallback((x: number, y: number): TimelineEvent | null => {
     for (const event of events) {
       const yOffset = event.yOffset || 0;
       
@@ -852,22 +1035,34 @@ export default function TimelineReview() {
         const start = timeToCoords(event.startYear, event.startQuarter, yOffset, event.startMonth);
         const end = timeToCoords(event.endYear, event.endQuarter, yOffset, event.endMonth);
         
-        // 水平线距离检测
-        const lineY = start.y; // 水平线
-        const minX = Math.min(start.x, end.x);
-        const maxX = Math.max(start.x, end.x);
+        // 计算点到线段的距离（支持跨年份的斜线）
+        const dx = end.x - start.x;
+        const dy = end.y - start.y;
+        const length = Math.sqrt(dx * dx + dy * dy);
         
-        // 检查X坐标是否在线段范围内，Y坐标是否接近
-        if (x >= minX && x <= maxX && Math.abs(y - lineY) < 15) {
-          return event;
+        if (length === 0) {
+          // 起点和终点重合，按点处理
+          const distance = Math.sqrt(Math.pow(x - start.x, 2) + Math.pow(y - start.y, 2));
+          if (distance < 15) return event;
+        } else {
+          // 计算点到线段的距离
+          const t = Math.max(0, Math.min(1, ((x - start.x) * dx + (y - start.y) * dy) / (length * length)));
+          const projX = start.x + t * dx;
+          const projY = start.y + t * dy;
+          const distance = Math.sqrt(Math.pow(x - projX, 2) + Math.pow(y - projY, 2));
+          
+          // 检查是否在线段范围内且距离足够近
+          if (distance < 15 && t >= 0 && t <= 1) {
+            return event;
+          }
         }
       }
     }
     return null;
-  };
+  }, [events, timeToCoords]);
 
   // 检查点击是否在年份分割线上
-  const getYearLineAtPoint = (x: number, y: number): number | null => {
+  const getYearLineAtPoint = useCallback((x: number, y: number): number | null => {
     // 只检查年份分割线区域（横线）
     if (x < leftMargin || x > leftMargin + quarterWidth * 4) return null;
     
@@ -889,10 +1084,10 @@ export default function TimelineReview() {
     }
     
     return null;
-  };
+  }, [startYear, endYear, getYearHeight]);
 
   // 检查点击是否在垂直标注上
-  const getVerticalAnnotationAtPoint = (x: number, y: number): VerticalAnnotation | null => {
+  const getVerticalAnnotationAtPoint = useCallback((x: number, y: number): VerticalAnnotation | null => {
     const annotationLeft = leftMargin - verticalAnnotationWidth - 10;
     const annotationRight = leftMargin - 10;
     
@@ -914,10 +1109,10 @@ export default function TimelineReview() {
       }
     }
     return null;
-  };
+  }, [verticalAnnotations, startYear, getYearHeight]);
 
   // 检查点击是否在年度摘要上
-  const getYearSummaryAtPoint = (x: number, y: number): YearSummary | null => {
+  const getYearSummaryAtPoint = useCallback((x: number, y: number): YearSummary | null => {
     const summaryLeft = leftMargin + quarterWidth * 4 + 20;
     const summaryRight = summaryLeft + yearSummaryWidth;
     
@@ -940,7 +1135,7 @@ export default function TimelineReview() {
       }
     }
     return null;
-  };
+  }, [yearSummaries, startYear, getYearHeight]);
 
   // 鼠标事件处理
   const handleMouseDown = async (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -1076,41 +1271,53 @@ export default function TimelineReview() {
         return;
       }
       
-      // 检查是否点击了事件
+      // 先检查是否点击在事件的端点上（优先检测，用于调整长度）
+      // 对所有持续事件进行检测，确保与悬停检测一致
+      let clickedHandle: { event: TimelineEvent; handle: 'start' | 'end' } | null = null;
+      for (const event of events) {
+        if (event.type === 'duration' && event.endYear && event.endQuarter) {
+          const handle = getEventHandleAtPoint(x, y, event);
+          if (handle) {
+            clickedHandle = { event, handle };
+            break;
+          }
+        }
+      }
+      
+      if (clickedHandle) {
+        // 点击在端点上，直接进入 resize 模式
+        setSelectedEvent(clickedHandle.event);
+        setIsDraggingEvent(true);
+        setDraggedEvent(clickedHandle.event);
+        setDragMode(clickedHandle.handle === 'start' ? 'resize-start' : 'resize-end');
+        setDragStartX(x);
+        setDragStartY(y);
+        setDragStartTime({ 
+          year: clickedHandle.event.startYear, 
+          quarter: clickedHandle.event.startQuarter,
+          month: clickedHandle.event.startMonth 
+        });
+        // 对于resize模式，dragStartMouseTime 不需要使用，但为了一致性也设置
+        const mouseTime = coordsToTime(x, y);
+        setDragStartMouseTime({
+          year: mouseTime.year,
+          quarter: mouseTime.quarter,
+          month: mouseTime.month
+        });
+        if (clickedHandle.event.endYear && clickedHandle.event.endQuarter) {
+          setDragEndTime({ 
+            year: clickedHandle.event.endYear, 
+            quarter: clickedHandle.event.endQuarter,
+            month: clickedHandle.event.endMonth 
+          });
+        }
+        return;
+      }
+      
+      // 检查是否点击了事件主体
       const clickedEvent = getEventAtPoint(x, y);
       if (clickedEvent) {
         setSelectedEvent(clickedEvent);
-        
-        // 检查是否点击在事件的端点上（用于调整长度）
-        const handle = getEventHandleAtPoint(x, y, clickedEvent);
-        if (handle && clickedEvent.type === 'duration') {
-          // 拖动端点调整长度
-          setIsDraggingEvent(true);
-          setDraggedEvent(clickedEvent);
-          setDragMode(handle === 'start' ? 'resize-start' : 'resize-end');
-          setDragStartX(x);
-          setDragStartY(y);
-          setDragStartTime({ 
-            year: clickedEvent.startYear, 
-            quarter: clickedEvent.startQuarter,
-            month: clickedEvent.startMonth 
-          });
-          // 对于resize模式，dragStartMouseTime 不需要使用，但为了一致性也设置
-          const mouseTime = coordsToTime(x, y);
-          setDragStartMouseTime({
-            year: mouseTime.year,
-            quarter: mouseTime.quarter,
-            month: mouseTime.month
-          });
-          if (clickedEvent.endYear && clickedEvent.endQuarter) {
-            setDragEndTime({ 
-              year: clickedEvent.endYear, 
-              quarter: clickedEvent.endQuarter,
-              month: clickedEvent.endMonth 
-            });
-          }
-          return;
-        }
         
         // 开始拖动事件（稍后根据拖动方向判断是垂直还是水平移动）
         setIsDraggingEvent(true);
@@ -1162,14 +1369,17 @@ export default function TimelineReview() {
     const y = (e.clientY - rect.top) * scaleY;
     
     // 检查鼠标是否悬停在年份分割线上（仅在非拖动状态下）
+    // 优化：只有在值变化时才更新状态，避免频繁重渲染
     if (!isDraggingYearLine && !isDraggingEvent && !isDragging) {
       const yearLine = getYearLineAtPoint(x, y);
-      setHoveredYearLine(yearLine);
+      if (yearLine !== hoveredYearLine) {
+        setHoveredYearLine(yearLine);
+      }
       
-      // 检查鼠标是否悬停在事件端点上
+      // 检查鼠标是否悬停在事件端点上（对所有持续事件进行检测，与点击检测一致）
       let foundHandle = null;
       for (const event of events) {
-        if (event.type === 'duration' && selectedEvent?.id === event.id) {
+        if (event.type === 'duration' && event.endYear && event.endQuarter) {
           const handle = getEventHandleAtPoint(x, y, event);
           if (handle) {
             foundHandle = { event, handle };
@@ -1177,7 +1387,12 @@ export default function TimelineReview() {
           }
         }
       }
-      setHoveredEventHandle(foundHandle);
+      // 只有在值变化时才更新
+      const currentHandleKey = foundHandle ? `${foundHandle.event.id}-${foundHandle.handle}` : null;
+      const hoveredHandleKey = hoveredEventHandle ? `${hoveredEventHandle.event.id}-${hoveredEventHandle.handle}` : null;
+      if (currentHandleKey !== hoveredHandleKey) {
+        setHoveredEventHandle(foundHandle);
+      }
     }
     
     // 处理年份分割线拖动
@@ -1198,73 +1413,186 @@ export default function TimelineReview() {
         const deltaX = Math.abs(x - dragStartX);
         const deltaY = Math.abs(y - dragStartY);
         
-        // 移动距离超过阈值才确定方向
-        if (deltaX > 5 || deltaY > 5) {
-          // 判断是垂直拖动还是水平拖动
-          if (deltaY > deltaX) {
+        // 移动距离超过阈值才确定方向（增加到10px，提供更好的"粘性"体验）
+        const threshold = 10;
+        if (deltaX > threshold || deltaY > threshold) {
+          // 判断是垂直拖动还是水平拖动（需要明显的方向差异）
+          if (deltaY > deltaX * 1.5) {
             setDragMode('vertical');
-          } else {
+          } else if (deltaX > deltaY * 1.5) {
             setDragMode('move');
           }
+          // 如果方向不明确（45度左右），继续等待更明确的方向
         }
         return; // 等待确定方向
       }
       
       if (dragMode === 'vertical') {
-        // 垂直拖动：调整 yOffset
-        const deltaY = y - dragStartY;
-        const newYOffset = dragStartYOffset + deltaY;
-        const updatedEvents = events.map(ev =>
-          ev.id === draggedEvent.id
-            ? { ...ev, yOffset: newYOffset }
-            : ev
-        );
-        setEvents(updatedEvents);
-        const updated = updatedEvents.find(ev => ev.id === draggedEvent.id);
-        if (updated) setDraggedEvent(updated);
+        // 垂直拖动：支持跨年移动
+        // 检测鼠标当前所在的年份
+        const currentTime = coordsToTime(dragStartX, y); // 使用拖动开始时的X坐标和当前Y坐标
+        const targetYear = currentTime.year;
+        
+        // 如果年份改变，更新事件的年份
+        if (targetYear !== draggedEvent.startYear) {
+          // 计算目标年份顶部位置的Y坐标
+          const targetTopPos = timeToBaseCoords(targetYear, draggedEvent.startQuarter, draggedEvent.startMonth);
+          const currentMouseY = y;
+          const newYOffset = currentMouseY - targetTopPos.y;
+          
+          // 限制在目标年份的合理范围内（相对于顶部）
+          const targetYearHeight = getYearHeight(targetYear);
+          const minOffset = 20; // 距离顶部至少20px
+          const maxOffset = targetYearHeight - 20; // 距离底部至少20px
+          const clampedYOffset = Math.max(minOffset, Math.min(maxOffset, newYOffset));
+          
+          const updatedEvents = events.map(ev => {
+            if (ev.id !== draggedEvent.id) return ev;
+            
+            if (ev.type === 'milestone') {
+              return {
+                ...ev,
+                startYear: targetYear,
+                yOffset: clampedYOffset
+              };
+            } else if (ev.type === 'duration' && ev.endYear && ev.endQuarter) {
+              // 持续事件：保持持续时长不变，同时移动起止年份
+              // 计算原始的总月数持续时长
+              const startMonth = ev.startMonth || (ev.startQuarter - 1) * 3 + 1;
+              const endMonth = ev.endMonth || (ev.endQuarter - 1) * 3 + 1;
+              const originalStartMonths = ev.startYear * 12 + startMonth;
+              const originalEndMonths = ev.endYear * 12 + endMonth;
+              const durationMonths = originalEndMonths - originalStartMonths;
+              
+              // 计算新的起止时间
+              const newStartMonth = ev.startMonth || (ev.startQuarter - 1) * 3 + 1;
+              const newStartMonths = targetYear * 12 + newStartMonth;
+              const newEndMonths = newStartMonths + durationMonths;
+              
+              let finalStartYear = targetYear;
+              let finalEndYear = Math.floor((newEndMonths - 1) / 12);
+              let finalEndMonth = ((newEndMonths - 1) % 12) + 1;
+              let finalEndQuarter = Math.ceil(finalEndMonth / 3);
+              
+              // 如果结束年份超出范围，调整起始年份使结束年份刚好在范围内
+              if (finalEndYear > endYear) {
+                finalEndYear = endYear;
+                const adjustedEndMonths = finalEndYear * 12 + (ev.endMonth || (ev.endQuarter - 1) * 3 + 1);
+                const adjustedStartMonths = adjustedEndMonths - durationMonths;
+                finalStartYear = Math.floor((adjustedStartMonths - 1) / 12);
+                if (finalStartYear < startYear) {
+                  // 如果持续时间太长，无法完全容纳，则保持原位不变
+                  return ev;
+                }
+              } else if (finalStartYear < startYear) {
+                finalStartYear = startYear;
+                const adjustedStartMonths = finalStartYear * 12 + newStartMonth;
+                const adjustedEndMonths = adjustedStartMonths + durationMonths;
+                finalEndYear = Math.floor((adjustedEndMonths - 1) / 12);
+                finalEndMonth = ((adjustedEndMonths - 1) % 12) + 1;
+                finalEndQuarter = Math.ceil(finalEndMonth / 3);
+                if (finalEndYear > endYear) {
+                  // 如果持续时间太长，无法完全容纳，则保持原位不变
+                  return ev;
+                }
+              }
+              
+              return {
+                ...ev,
+                startYear: finalStartYear,
+                endYear: finalEndYear,
+                endMonth: finalEndMonth,
+                endQuarter: finalEndQuarter,
+                yOffset: clampedYOffset
+              };
+            }
+            return ev;
+          });
+          
+          setEvents(updatedEvents);
+          const updated = updatedEvents.find(ev => ev.id === draggedEvent.id);
+          if (updated) {
+            setDraggedEvent(updated);
+            setSelectedEvent(updated);
+            // 更新拖动起始点，以便后续平滑拖动
+            setDragStartY(y);
+            setDragStartYOffset(clampedYOffset);
+          }
+        } else {
+          // 同一年份内的垂直移动
+          const deltaY = y - dragStartY;
+          const rawYOffset = dragStartYOffset + deltaY;
+          
+          // 限制在当前年份的合理范围内（相对于顶部）
+          const yearHeight = getYearHeight(draggedEvent.startYear);
+          const minOffset = 20; // 距离顶部至少20px
+          const maxOffset = yearHeight - 20; // 距离底部至少20px
+          const newYOffset = Math.max(minOffset, Math.min(maxOffset, rawYOffset));
+          
+          const updatedEvents = events.map(ev =>
+            ev.id === draggedEvent.id
+              ? { ...ev, yOffset: newYOffset }
+              : ev
+          );
+          setEvents(updatedEvents);
+          const updated = updatedEvents.find(ev => ev.id === draggedEvent.id);
+          if (updated) setDraggedEvent(updated);
+        }
       } else if (dragMode === 'move') {
         // 水平拖动：移动整个事件（使用月份计算）
         if (dragStartTime && dragStartMouseTime) {
           const currentTime = coordsToTime(x, y);
           
+          // 辅助函数：将年月转换为总月数（从startYear开始计算）
+          const toTotalMonths = (year: number, month?: number, quarter?: number) => {
+            const m = month || (quarter ? (quarter - 1) * 3 + 2 : 1); // 如果没有月份，季度使用中间月
+            return (year - startYear) * 12 + (m - 1); // 转换为0基数，便于计算
+          };
+          
+          // 辅助函数：将总月数转换回年月
+          const fromTotalMonths = (totalMonths: number) => {
+            const clampedMonths = Math.max(0, Math.min((endYear - startYear + 1) * 12 - 1, totalMonths));
+            const yearOffset = Math.floor(clampedMonths / 12);
+            const month = (clampedMonths % 12) + 1; // 转回1-12
+            const year = startYear + yearOffset;
+            const quarter = Math.ceil(month / 3);
+            return { year, month, quarter };
+          };
+          
           // 计算鼠标移动的时间差（基于月份）
-          const dragStartMouseMonthTotal = (dragStartMouseTime.year - startYear) * 12 + (dragStartMouseTime.month || (dragStartMouseTime.quarter - 1) * 3 + 1.5);
-          const currentMouseMonthTotal = (currentTime.year - startYear) * 12 + currentTime.month;
-          const deltaMonths = Math.round(currentMouseMonthTotal - dragStartMouseMonthTotal);
+          const dragStartMouseMonths = toTotalMonths(dragStartMouseTime.year, dragStartMouseTime.month, dragStartMouseTime.quarter);
+          const currentMouseMonths = toTotalMonths(currentTime.year, currentTime.month, currentTime.quarter);
+          const deltaMonths = Math.round(currentMouseMonths - dragStartMouseMonths);
           
           const updatedEvents = events.map(ev => {
             if (ev.id !== draggedEvent.id) return ev;
             
             // 计算新的开始时间（将鼠标移动的偏移量应用到事件的原始时间）
-            const originalStartMonthTotal = (dragStartTime.year - startYear) * 12 + (dragStartTime.month || (dragStartTime.quarter - 1) * 3 + 1.5);
-            const newStartMonthTotal = originalStartMonthTotal + deltaMonths;
-            const newStartYear = Math.max(startYear, Math.min(endYear, startYear + Math.floor(newStartMonthTotal / 12)));
-            const newStartMonth = Math.max(1, Math.min(12, Math.round(newStartMonthTotal % 12) || 12));
-            const newStartQuarter = Math.ceil(newStartMonth / 3);
+            const originalStartMonths = toTotalMonths(dragStartTime.year, dragStartTime.month, dragStartTime.quarter);
+            const newStartMonths = originalStartMonths + deltaMonths;
+            const newStart = fromTotalMonths(newStartMonths);
             
             if (ev.type === 'milestone') {
               return {
                 ...ev,
-                startYear: newStartYear,
-                startQuarter: newStartQuarter,
-                startMonth: newStartMonth
+                startYear: newStart.year,
+                startQuarter: newStart.quarter,
+                startMonth: newStart.month
               };
             } else if (ev.type === 'duration' && dragEndTime) {
               // 计算新的结束时间（同样应用偏移量）
-              const originalEndMonthTotal = (dragEndTime.year - startYear) * 12 + (dragEndTime.month || (dragEndTime.quarter - 1) * 3 + 1.5);
-              const newEndMonthTotal = originalEndMonthTotal + deltaMonths;
-              const newEndYear = Math.max(startYear, Math.min(endYear, startYear + Math.floor(newEndMonthTotal / 12)));
-              const newEndMonth = Math.max(1, Math.min(12, Math.round(newEndMonthTotal % 12) || 12));
-              const newEndQuarter = Math.ceil(newEndMonth / 3);
+              const originalEndMonths = toTotalMonths(dragEndTime.year, dragEndTime.month, dragEndTime.quarter);
+              const newEndMonths = originalEndMonths + deltaMonths;
+              const newEnd = fromTotalMonths(newEndMonths);
               
               return {
                 ...ev,
-                startYear: newStartYear,
-                startQuarter: newStartQuarter,
-                startMonth: newStartMonth,
-                endYear: newEndYear,
-                endQuarter: newEndQuarter,
-                endMonth: newEndMonth
+                startYear: newStart.year,
+                startQuarter: newStart.quarter,
+                startMonth: newStart.month,
+                endYear: newEnd.year,
+                endQuarter: newEnd.quarter,
+                endMonth: newEnd.month
               };
             }
             return ev;
@@ -1383,6 +1711,13 @@ export default function TimelineReview() {
     const startTime = coordsToTime(dragStart.x, dragStart.y);
     const endTime = coordsToTime(endX, endY);
     
+    // 计算相对于年份顶部的 yOffset
+    const yearTopPos = timeToBaseCoords(startTime.year, startTime.quarter, startTime.month);
+    const yOffset = dragStart.y - yearTopPos.y;
+    // 限制在合理范围内
+    const yearHeight = getYearHeight(startTime.year);
+    const clampedYOffset = Math.max(20, Math.min(yearHeight - 20, yOffset));
+    
     const newEvent: TimelineEvent = {
       id: Date.now().toString(),
       title: '新事件',
@@ -1394,7 +1729,7 @@ export default function TimelineReview() {
       color: selectedColor,
       position: dragStart,
       result: 'neutral',
-      yOffset: 0 // 初始偏移为0
+      yOffset: clampedYOffset // 相对于年份顶部的偏移
     };
     
     if (newEventType === 'duration') {
@@ -1516,6 +1851,20 @@ export default function TimelineReview() {
     return maxYear;
   };
 
+  // 计算鼠标光标样式（简化逻辑）
+  const getCursorStyle = () => {
+    if (isDraggingYearLine) return 'ns-resize';
+    if (hoveredYearLine !== null) return 'ns-resize';
+    if (hoveredEventHandle !== null) return 'ew-resize';
+    if (isDraggingEvent) {
+      if (dragMode === 'vertical') return 'ns-resize';
+      if (dragMode === 'resize-start' || dragMode === 'resize-end') return 'ew-resize';
+      if (dragMode === 'move') return 'move';
+    }
+    if (isAddingEvent) return 'crosshair';
+    return 'pointer';
+  };
+
   // 添加年度摘要
   const addYearSummary = async () => {
     const result = await showForm('添加年度摘要', [
@@ -1624,17 +1973,228 @@ export default function TimelineReview() {
     const eventToEdit = event || selectedEvent;
     if (!eventToEdit) return;
     
-    const title = await showPrompt('事件名称：', eventToEdit.title);
-    if (title) {
-      setEvents(prevEvents => prevEvents.map(e => 
-        e.id === eventToEdit.id ? { ...e, title } : e
-      ));
-      // 如果编辑的是选中的事件，更新选中状态
-      if (selectedEvent?.id === eventToEdit.id) {
-        setSelectedEvent({ ...eventToEdit, title });
+    // 准备表单字段
+    const fields: FormField[] = [
+      {
+        name: 'title',
+        label: '事件名称',
+        type: 'text',
+        defaultValue: eventToEdit.title,
+        required: true
+      },
+      {
+        name: 'type',
+        label: '事件类型',
+        type: 'select',
+        defaultValue: eventToEdit.type,
+        required: true,
+        options: [
+          { value: 'milestone', label: '📍 里程碑' },
+          { value: 'duration', label: '📊 持续性事件' }
+        ]
+      },
+      {
+        name: 'category',
+        label: '分类',
+        type: 'select',
+        defaultValue: eventToEdit.category || 'default',
+        required: true,
+        options: [
+          { value: '产品开发', label: '🔧 产品开发' },
+          { value: '产品发布', label: '🚀 产品发布' },
+          { value: '产品迭代', label: '🔄 产品迭代' },
+          { value: '人事变动', label: '👥 人事变动' },
+          { value: '组织架构', label: '🏢 组织架构' },
+          { value: '业务拓展', label: '📈 业务拓展' },
+          { value: '合作项目', label: '🤝 合作项目' },
+          { value: '技术探索', label: '🔬 技术探索' },
+          { value: '技术突破', label: '💥 技术突破' },
+          { value: '内部项目', label: '🏠 内部项目' },
+          { value: '其他', label: '⚪ 其他' },
+          { value: 'default', label: '📍 默认' }
+        ]
+      },
+      {
+        name: 'startYear',
+        label: '开始年份',
+        type: 'number',
+        defaultValue: eventToEdit.startYear.toString(),
+        required: true
+      },
+      {
+        name: 'startMonth',
+        label: '开始月份 (1-12)',
+        type: 'number',
+        defaultValue: (eventToEdit.startMonth || (eventToEdit.startQuarter - 1) * 3 + 1).toString(),
+        required: true
       }
-      saveHistory();
+    ];
+    
+    // 如果是持续性事件，添加结束时间字段
+    // 注意：即使当前是里程碑，如果用户切换到持续性事件，也需要这些字段
+    // 所以如果当前是持续性事件，显示这些字段；如果是里程碑，字段会在类型切换时自动处理
+    if (eventToEdit.type === 'duration') {
+      // 计算默认结束时间
+      const defaultEndYear = eventToEdit.endYear || eventToEdit.startYear;
+      const defaultEndMonth = eventToEdit.endMonth || 
+        (eventToEdit.endQuarter ? (eventToEdit.endQuarter - 1) * 3 + 1 : 
+         (eventToEdit.startMonth || (eventToEdit.startQuarter - 1) * 3 + 1));
+      
+      fields.push(
+        {
+          name: 'endYear',
+          label: '结束年份',
+          type: 'number',
+          defaultValue: defaultEndYear.toString(),
+          required: true
+        },
+        {
+          name: 'endMonth',
+          label: '结束月份 (1-12)',
+          type: 'number',
+          defaultValue: defaultEndMonth.toString(),
+          required: true
+        }
+      );
+    } else {
+      // 当前是里程碑，但如果用户切换到持续性事件，需要结束时间
+      // 预计算一个合理的默认结束时间（开始时间后3个月）
+      const startMonth = eventToEdit.startMonth || (eventToEdit.startQuarter - 1) * 3 + 1;
+      const totalMonths = eventToEdit.startYear * 12 + startMonth + 3;
+      const defaultEndYear = Math.floor((totalMonths - 1) / 12);
+      const defaultEndMonth = ((totalMonths - 1) % 12) + 1;
+      
+      // 添加结束时间字段，但标记为非必填（因为当前是里程碑）
+      // 当用户切换到持续性事件时，这些字段会被使用
+      fields.push(
+        {
+          name: 'endYear',
+          label: '结束年份（切换到持续性事件时需要）',
+          type: 'number',
+          defaultValue: defaultEndYear.toString(),
+          required: false
+        },
+        {
+          name: 'endMonth',
+          label: '结束月份 (1-12)（切换到持续性事件时需要）',
+          type: 'number',
+          defaultValue: defaultEndMonth.toString(),
+          required: false
+        }
+      );
     }
+    
+    // 添加备注字段
+    fields.push({
+      name: 'notes',
+      label: '备注',
+      type: 'textarea',
+      defaultValue: eventToEdit.notes || '',
+      required: false
+    });
+    
+    const result = await showForm('编辑事件', fields, {
+      onDelete: async () => {
+        const shouldDelete = await showConfirm('确定删除此事件？');
+        if (shouldDelete) {
+          setEvents(events.filter(e => e.id !== eventToEdit.id));
+          setSelectedEvent(null);
+          saveHistory();
+        }
+      }
+    });
+    
+    if (!result) return;
+    
+    // 处理开始时间
+    const newStartYear = parseInt(result.startYear || '');
+    const newStartMonth = parseInt(result.startMonth || '1');
+    
+    // 验证开始时间
+    if (!newStartYear || newStartYear < startYear || newStartYear > endYear) {
+      await showAlert('错误', `开始年份必须在 ${startYear} 到 ${endYear} 之间`);
+      return;
+    }
+    
+    if (newStartMonth < 1 || newStartMonth > 12) {
+      await showAlert('错误', '开始月份必须在 1 到 12 之间');
+      return;
+    }
+    
+    const newStartQuarter = Math.ceil(newStartMonth / 3);
+    
+    // 处理事件类型切换和数据更新
+    const newType = result.type as 'milestone' | 'duration';
+    const updatedEvent: Partial<TimelineEvent> = {
+      title: result.title.trim(),
+      type: newType,
+      category: result.category,
+      notes: result.notes?.trim() || undefined,
+      startYear: newStartYear,
+      startQuarter: newStartQuarter,
+      startMonth: newStartMonth
+    };
+    
+    // 处理类型切换
+    if (newType === 'duration') {
+      // 切换到持续性事件：需要设置结束时间
+      // 如果表单中没有结束时间字段（从里程碑切换过来），使用默认值
+      let newEndYear: number;
+      let newEndMonth: number;
+      
+      if (result.endYear && result.endMonth) {
+        newEndYear = parseInt(result.endYear);
+        newEndMonth = parseInt(result.endMonth);
+      } else {
+        // 从里程碑切换：默认结束时间为新的开始时间后3个月
+        const totalMonths = newStartYear * 12 + newStartMonth + 3;
+        newEndYear = Math.floor((totalMonths - 1) / 12);
+        newEndMonth = ((totalMonths - 1) % 12) + 1;
+      }
+      
+      if (!newEndYear || newEndYear < startYear || newEndYear > endYear) {
+        await showAlert('错误', `结束年份必须在 ${startYear} 到 ${endYear} 之间`);
+        return;
+      }
+      
+      if (newEndMonth < 1 || newEndMonth > 12) {
+        await showAlert('错误', '结束月份必须在 1 到 12 之间');
+        return;
+      }
+      
+      const newEndQuarter = Math.ceil(newEndMonth / 3);
+      
+      // 确保结束时间不早于开始时间（使用新的开始时间）
+      const startMonthTotal = newStartYear * 12 + newStartMonth;
+      const endMonthTotal = newEndYear * 12 + newEndMonth;
+      
+      if (endMonthTotal < startMonthTotal) {
+        await showAlert('错误', '结束时间不能早于开始时间');
+        return;
+      }
+      
+      updatedEvent.endYear = newEndYear;
+      updatedEvent.endQuarter = newEndQuarter;
+      updatedEvent.endMonth = newEndMonth;
+    } else {
+      // 切换到里程碑：清除结束时间
+      updatedEvent.endYear = undefined;
+      updatedEvent.endQuarter = undefined;
+      updatedEvent.endMonth = undefined;
+    }
+    
+    // 更新事件
+    const finalEvent = { ...eventToEdit, ...updatedEvent };
+    setEvents(prevEvents => prevEvents.map(e => 
+      e.id === eventToEdit.id ? finalEvent : e
+    ));
+    
+    // 如果编辑的是选中的事件，更新选中状态
+    if (selectedEvent?.id === eventToEdit.id) {
+      setSelectedEvent(finalEvent);
+    }
+    
+    saveHistory();
   };
 
   // 编辑选中的事件
@@ -1715,6 +2275,11 @@ export default function TimelineReview() {
     reader.readAsText(file);
   };
 
+  // 计算按钮的 disabled 状态，确保正确响应 events 的变化
+  const isAIAnalysisDisabled = useMemo(() => {
+    return isAnalyzing || events.length === 0;
+  }, [isAnalyzing, events]);
+
   return (
     <div className={styles.timelineReviewContainer}>
       <div className={styles.toolbar}>
@@ -1745,17 +2310,6 @@ export default function TimelineReview() {
         </div>
 
         <div className={styles.toolbarSection}>
-          <label>
-            事件类型：
-            <select 
-              value={newEventType} 
-              onChange={(e) => setNewEventType(e.target.value as 'milestone' | 'duration')}
-            >
-              <option value="duration">持续事件</option>
-              <option value="milestone">里程碑</option>
-            </select>
-          </label>
-          
           <div className={styles.colorPicker}>
             颜色：
             {COLORS.map(color => (
@@ -1771,10 +2325,23 @@ export default function TimelineReview() {
 
         <div className={styles.toolbarSection}>
           <button 
-            className={`${styles.btn} ${isAddingEvent ? styles.active : ''}`}
-            onClick={() => setIsAddingEvent(!isAddingEvent)}
+            className={`${styles.btn} ${isAddingEvent && newEventType === 'milestone' ? styles.active : ''}`}
+            onClick={() => {
+              setNewEventType('milestone');
+              setIsAddingEvent(true);
+            }}
           >
-            {isAddingEvent ? '✓ 添加模式' : '+ 添加事件'}
+            {isAddingEvent && newEventType === 'milestone' ? '✓ 添加里程碑' : '📍 添加里程碑'}
+          </button>
+          
+          <button 
+            className={`${styles.btn} ${isAddingEvent && newEventType === 'duration' ? styles.active : ''}`}
+            onClick={() => {
+              setNewEventType('duration');
+              setIsAddingEvent(true);
+            }}
+          >
+            {isAddingEvent && newEventType === 'duration' ? '✓ 添加持续事件' : '📊 添加持续事件'}
           </button>
           
           <button className={styles.btn} onClick={addYearSummary}>
@@ -1816,7 +2383,7 @@ export default function TimelineReview() {
           <button 
             className={`${styles.btn} ${styles.btnPrimary}`}
             onClick={performAIAnalysis}
-            disabled={isAnalyzing || events.length === 0}
+            disabled={isAIAnalysisDisabled}
           >
             {isAnalyzing ? '🤔 分析中...' : '🤖 AI 复盘'}
           </button>
@@ -1865,13 +2432,7 @@ export default function TimelineReview() {
           style={{ 
             width: `${canvasWidth}px`,
             height: `${canvasHeight}px`,
-            cursor: isDraggingYearLine ? 'ns-resize' : 
-                    (hoveredYearLine !== null ? 'ns-resize' : 
-                    (hoveredEventHandle !== null ? 'ew-resize' :
-                    (isDraggingEvent && dragMode === 'vertical' ? 'ns-resize' : 
-                    (isDraggingEvent && (dragMode === 'resize-start' || dragMode === 'resize-end') ? 'ew-resize' :
-                    (isDraggingEvent && dragMode === 'move' ? 'move' :
-                    (isAddingEvent ? 'crosshair' : 'pointer'))))))
+            cursor: getCursorStyle()
           }}
         />
       </div>
@@ -1889,8 +2450,9 @@ export default function TimelineReview() {
       <div className={styles.instructions}>
         <h3>使用说明：</h3>
         <ul>
-          <li>🎨 选择颜色和事件类型后，点击"添加事件"进入添加模式</li>
-          <li>🖱️ 在画布上拖拽创建持续事件，单击创建里程碑</li>
+          <li>🎨 选择颜色后，点击"添加里程碑"或"添加持续事件"按钮进入添加模式</li>
+          <li>📍 里程碑模式：在画布上单击或拖拽创建里程碑事件</li>
+          <li>📊 持续事件模式：在画布上拖拽创建持续事件</li>
           <li>👆 点击已有事件进行选中，然后可在工具栏编辑、标记结果或删除</li>
           <li>↕️ 点击并上下拖拽事件，可调整事件位置（避免重叠）</li>
           <li>↔️ 点击并左右拖拽事件，可移动事件（改变年份和季度）</li>
@@ -1936,7 +2498,10 @@ export default function TimelineReview() {
               {dialog.type === 'form' && dialog.fields && (
                 <div className={styles.formFields}>
                   {dialog.fields.map((field, index) => (
-                    <div key={field.name} className={styles.formField}>
+                    <div 
+                      key={field.name} 
+                      className={`${styles.formField} ${field.type === 'textarea' ? styles.fullWidth : ''}`}
+                    >
                       <label className={styles.formLabel}>
                         {field.label}
                         {field.required && <span className={styles.required}>*</span>}
@@ -1950,6 +2515,19 @@ export default function TimelineReview() {
                           rows={4}
                           autoFocus={index === 0}
                         />
+                      ) : field.type === 'select' ? (
+                        <select
+                          value={formData[field.name] || ''}
+                          onChange={(e) => setFormData({ ...formData, [field.name]: e.target.value })}
+                          className={styles.dialogInput}
+                          autoFocus={index === 0}
+                        >
+                          {field.options?.map(option => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
                       ) : (
                         <input
                           type={field.type}
