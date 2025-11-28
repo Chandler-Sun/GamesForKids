@@ -2254,6 +2254,34 @@ export default function TimelineReview() {
     a.click();
   };
 
+  // 导出画布为图片
+  const exportCanvasAsImage = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) {
+      showAlert('导出失败', '画布未初始化');
+      return;
+    }
+
+    try {
+      // 使用 toDataURL 将画布转换为图片
+      // 使用 PNG 格式以保持高质量
+      const dataURL = canvas.toDataURL('image/png', 1.0);
+      
+      // 创建下载链接
+      const link = document.createElement('a');
+      link.download = `timeline-review-${Date.now()}.png`;
+      link.href = dataURL;
+      
+      // 触发下载
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('导出图片失败:', error);
+      showAlert('导出失败', '导出图片时发生错误，请稍后重试');
+    }
+  };
+
   // 导入数据
   const importData = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -2367,7 +2395,11 @@ export default function TimelineReview() {
 
         <div className={styles.toolbarSection}>
           <button className={styles.btn} onClick={exportData}>
-            💾 导出
+            💾 导出数据
+          </button>
+          
+          <button className={styles.btn} onClick={exportCanvasAsImage}>
+            🖼️ 导出图片
           </button>
           
           <label className={styles.btn}>
