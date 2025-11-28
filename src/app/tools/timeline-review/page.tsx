@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import styles from './page.module.css';
+import aiService from '@/lib/services/ai_service';
 
 interface Point {
   x: number;
@@ -163,7 +164,8 @@ export default function TimelineReview() {
   const [dragStartY, setDragStartY] = useState<number>(0); // 拖拽开始时的Y坐标
   const [dragStartYOffset, setDragStartYOffset] = useState<number>(0); // 拖拽开始时的yOffset
   const [dragStartX, setDragStartX] = useState<number>(0); // 拖拽开始时的X坐标
-  const [dragStartTime, setDragStartTime] = useState<{ year: number; quarter: number; month?: number } | null>(null); // 拖拽开始时的时间位置
+  const [dragStartTime, setDragStartTime] = useState<{ year: number; quarter: number; month?: number } | null>(null); // 拖拽开始时的时间位置（事件的原始时间）
+  const [dragStartMouseTime, setDragStartMouseTime] = useState<{ year: number; quarter: number; month?: number } | null>(null); // 拖拽开始时鼠标点击位置的时间
   const [dragEndTime, setDragEndTime] = useState<{ year: number; quarter: number; month?: number } | null>(null); // 拖拽开始时的时间位置（持续事件的结束时间）
   const [dragMode, setDragMode] = useState<'move' | 'resize-start' | 'resize-end' | 'vertical' | null>(null); // 拖动模式
   const [dragStart, setDragStart] = useState<Point | null>(null);
@@ -1093,6 +1095,13 @@ export default function TimelineReview() {
             quarter: clickedEvent.startQuarter,
             month: clickedEvent.startMonth 
           });
+          // 对于resize模式，dragStartMouseTime 不需要使用，但为了一致性也设置
+          const mouseTime = coordsToTime(x, y);
+          setDragStartMouseTime({
+            year: mouseTime.year,
+            quarter: mouseTime.quarter,
+            month: mouseTime.month
+          });
           if (clickedEvent.endYear && clickedEvent.endQuarter) {
             setDragEndTime({ 
               year: clickedEvent.endYear, 
@@ -1110,10 +1119,18 @@ export default function TimelineReview() {
         setDragStartX(x);
         setDragStartY(y);
         setDragStartYOffset(clickedEvent.yOffset || 0);
+        // 记录事件的原始时间
         setDragStartTime({ 
           year: clickedEvent.startYear, 
           quarter: clickedEvent.startQuarter,
           month: clickedEvent.startMonth 
+        });
+        // 记录鼠标点击位置对应的时间（用于计算拖动偏移）
+        const mouseTime = coordsToTime(x, y);
+        setDragStartMouseTime({
+          year: mouseTime.year,
+          quarter: mouseTime.quarter,
+          month: mouseTime.month
         });
         if (clickedEvent.endYear && clickedEvent.endQuarter) {
           setDragEndTime({ 
@@ -1207,18 +1224,18 @@ export default function TimelineReview() {
         if (updated) setDraggedEvent(updated);
       } else if (dragMode === 'move') {
         // 水平拖动：移动整个事件（使用月份计算）
-        if (dragStartTime) {
+        if (dragStartTime && dragStartMouseTime) {
           const currentTime = coordsToTime(x, y);
           
-          // 计算时间差（基于月份）
-          const startMonthTotal = (dragStartTime.year - startYear) * 12 + (dragStartTime.month || (dragStartTime.quarter - 1) * 3 + 1.5);
-          const currentMonthTotal = (currentTime.year - startYear) * 12 + currentTime.month;
-          const deltaMonths = Math.round(currentMonthTotal - startMonthTotal);
+          // 计算鼠标移动的时间差（基于月份）
+          const dragStartMouseMonthTotal = (dragStartMouseTime.year - startYear) * 12 + (dragStartMouseTime.month || (dragStartMouseTime.quarter - 1) * 3 + 1.5);
+          const currentMouseMonthTotal = (currentTime.year - startYear) * 12 + currentTime.month;
+          const deltaMonths = Math.round(currentMouseMonthTotal - dragStartMouseMonthTotal);
           
           const updatedEvents = events.map(ev => {
             if (ev.id !== draggedEvent.id) return ev;
             
-            // 计算新的开始时间
+            // 计算新的开始时间（将鼠标移动的偏移量应用到事件的原始时间）
             const originalStartMonthTotal = (dragStartTime.year - startYear) * 12 + (dragStartTime.month || (dragStartTime.quarter - 1) * 3 + 1.5);
             const newStartMonthTotal = originalStartMonthTotal + deltaMonths;
             const newStartYear = Math.max(startYear, Math.min(endYear, startYear + Math.floor(newStartMonthTotal / 12)));
@@ -1233,7 +1250,7 @@ export default function TimelineReview() {
                 startMonth: newStartMonth
               };
             } else if (ev.type === 'duration' && dragEndTime) {
-              // 计算新的结束时间
+              // 计算新的结束时间（同样应用偏移量）
               const originalEndMonthTotal = (dragEndTime.year - startYear) * 12 + (dragEndTime.month || (dragEndTime.quarter - 1) * 3 + 1.5);
               const newEndMonthTotal = originalEndMonthTotal + deltaMonths;
               const newEndYear = Math.max(startYear, Math.min(endYear, startYear + Math.floor(newEndMonthTotal / 12)));
@@ -1346,6 +1363,7 @@ export default function TimelineReview() {
       setDragStartY(0);
       setDragStartYOffset(0);
       setDragStartTime(null);
+      setDragStartMouseTime(null);
       setDragEndTime(null);
       saveHistory();
       return;
@@ -1405,35 +1423,79 @@ export default function TimelineReview() {
   const performAIAnalysis = async () => {
     setIsAnalyzing(true);
     
-    // 模拟 AI 分析（实际应用中应调用真实的 AI API）
-    setTimeout(() => {
-      const insights = `
+    try {
+      // 检查是否配置了 API Key
+      const apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
+      if (!apiKey) {
+        const fallbackInsights = `
 📊 时间线复盘分析报告
+
+⚠️ 未配置 OpenRouter API Key，显示基础统计信息
 
 一、整体趋势
 • 在 ${startYear}-${endYear} 期间，共记录了 ${events.length} 个重要事件
 • 成功事件：${events.filter(e => e.result === 'good').length} 个
 • 遇挫事件：${events.filter(e => e.result === 'bad').length} 个
+• 中性事件：${events.filter(e => e.result === 'neutral' || !e.result).length} 个
 
 二、关键洞察
 • 事件密集期：${getMostBusyYear()} 是最繁忙的一年
-• 建议关注长期项目的完成率和时间管理
-• 不同类型事件的分布较为均衡
+• 里程碑事件：${events.filter(e => e.type === 'milestone').length} 个
+• 持续事件：${events.filter(e => e.type === 'duration').length} 个
 
-三、改进建议
-• 继续保持记录习惯，有助于长期复盘
-• 对于结果不理想的事件，建议深入分析原因
-• 可以尝试设定更多里程碑节点，便于追踪进度
+💡 提示：配置 NEXT_PUBLIC_OPENROUTER_API_KEY 环境变量以启用 AI 深度分析功能。
+        `;
+        
+        setAiInsights(fallbackInsights.trim());
+        setIsAnalyzing(false);
+        return;
+      }
 
-四、下一步行动
-• 为即将到来的季度设定清晰目标
-• 定期回顾时间线，调整策略
-• 考虑增加跨年度的战略性项目规划
+      // 调用真实的 AI 服务
+      const insights = await aiService.analyzeTimeline({
+        events: events.map(e => ({
+          title: e.title,
+          startYear: e.startYear,
+          startQuarter: e.startQuarter,
+          startMonth: e.startMonth,
+          endYear: e.endYear,
+          endQuarter: e.endQuarter,
+          endMonth: e.endMonth,
+          type: e.type,
+          category: e.category,
+          result: e.result,
+          notes: e.notes
+        })),
+        yearSummaries,
+        startYear,
+        endYear
+      });
+      
+      setAiInsights(insights);
+    } catch (error) {
+      console.error('AI 分析失败:', error);
+      
+      // 如果 AI 调用失败，显示错误信息和基础统计
+      const errorInsights = `
+📊 时间线复盘分析报告
+
+❌ AI 分析失败: ${error instanceof Error ? error.message : '未知错误'}
+
+基础统计信息：
+• 时间范围：${startYear}-${endYear} 期间
+• 总事件数：${events.length} 个
+• 成功事件：${events.filter(e => e.result === 'good').length} 个
+• 遇挫事件：${events.filter(e => e.result === 'bad').length} 个
+• 中性事件：${events.filter(e => e.result === 'neutral' || !e.result).length} 个
+• 事件密集期：${getMostBusyYear()} 年
+
+💡 提示：请检查 API Key 配置和网络连接。
       `;
       
-      setAiInsights(insights.trim());
+      setAiInsights(errorInsights.trim());
+    } finally {
       setIsAnalyzing(false);
-    }, 2000);
+    }
   };
 
   const getMostBusyYear = () => {

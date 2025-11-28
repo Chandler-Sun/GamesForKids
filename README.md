@@ -1,5 +1,27 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## ✨ Features
+
+- 🎮 **数学游戏**: 100以内加减法练习
+- 🚀 **太空字母射击**: 英文字母学习游戏
+- ✍️ **中文书法练习**: 在线书法创作工具
+- 📅 **时间线复盘工具**: 带 AI 智能分析的可视化复盘工具
+
+## 🤖 AI 功能
+
+本项目集成了 OpenRouter AI 服务，为时间线复盘工具提供智能分析功能。
+
+### 配置 AI 服务
+
+1. 访问 [OpenRouter](https://openrouter.ai/) 获取 API Key
+2. 在项目根目录创建 `.env.local` 文件
+3. 添加配置：
+```bash
+NEXT_PUBLIC_OPENROUTER_API_KEY=your_api_key_here
+```
+
+详细配置请参考 [AI_SERVICE_README.md](./AI_SERVICE_README.md)
+
 ## Getting Started
 
 First, run the development server:
