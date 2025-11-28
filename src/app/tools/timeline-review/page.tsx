@@ -225,7 +225,7 @@ export default function TimelineReview() {
   const canvasWidth = 1400;
   const leftMargin = 180; // 增加左边距以容纳更宽的垂直标注区域
   const topMargin = 80;
-  const baseYearHeight = 120; // 基础年份高度（增加以容纳多个事件）
+  const baseYearHeight = 180; // 基础年份高度（增加以容纳多个事件）
   const quarterWidth = 220; // 略微减少以保持总体宽度
   const verticalAnnotationWidth = 150; // 垂直标注区域宽度
   const yearSummaryWidth = 180; // 年度摘要区域宽度（较窄）
@@ -991,7 +991,7 @@ export default function TimelineReview() {
   }, [events, yearSummaries, verticalAnnotations, startYear, endYear, yearCount, 
       isDragging, dragStart, currentDrag, newEventType, selectedColor, selectedEvent,
       getYearHeight, timeToCoords, coordsToTime, isDraggingYearLine, draggedYearLine, hoveredYearLine, 
-      isDraggingEvent, draggedEvent, dragMode]);
+      isDraggingEvent, draggedEvent, dragMode, canvasHeight, canvasWidth, savedCanvasHeight]);
 
   useEffect(() => {
     drawTimeline();
