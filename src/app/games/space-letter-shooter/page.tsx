@@ -335,7 +335,7 @@ export default function SpaceLetterShooter() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-black text-white p-4 relative overflow-hidden">
+    <div className="flex flex-col h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-black text-white relative overflow-hidden">
       {/* 动态背景星星 */}
       <div className="fixed inset-0 pointer-events-none">
         {Array.from({ length: 100 }).map((_, i) => (
@@ -352,18 +352,18 @@ export default function SpaceLetterShooter() {
         ))}
       </div>
 
-      <nav className="fixed top-0 left-0 w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 flex justify-between items-center z-50 shadow-lg">
-        <a href="/" className="text-lg font-bold hover:text-yellow-300 transition-colors">🚀 返回首页</a>
+      <nav className="fixed top-0 left-0 w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white p-2 flex justify-between items-center z-50 shadow-lg">
+        <a href="/" className="text-base font-bold hover:text-yellow-300 transition-colors">🚀 返回首页</a>
         <button
           onClick={() => setShowSettings(!showSettings)}
-          className="bg-white text-blue-600 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="bg-white text-blue-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-sm"
         >
           ⚙️ 选项
         </button>
       </nav>
 
       {showSettings && (
-        <div className="fixed top-16 right-0 w-64 bg-gradient-to-b from-gray-800 to-gray-900 p-4 shadow-xl z-40 rounded-l-lg border-l border-blue-500">
+        <div className="fixed top-12 right-0 w-64 bg-gradient-to-b from-gray-800 to-gray-900 p-4 shadow-xl z-40 rounded-l-lg border-l border-blue-500">
           <div className="mt-4">
             <label htmlFor="difficulty" className="block mb-2 text-blue-300">难度:</label>
             <select
@@ -485,25 +485,24 @@ export default function SpaceLetterShooter() {
         </div>
       )}
 
-      <div className="mt-16 w-full max-w-4xl">
-        <h1 className="text-5xl font-bold mb-4 text-center bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
-          🌟 太空飞船打字母 🌟
-        </h1>
-        
+      <div className="flex flex-col h-full pt-12 w-full max-w-full px-2">
         {!gameStarted && !gameOver && (
-          <div className="text-center mb-8 bg-gradient-to-r from-blue-900/50 to-purple-900/50 p-6 rounded-xl border border-blue-500/30">
-            <h2 className="text-3xl mb-4 text-yellow-300">🎮 游戏说明</h2>
-            <div className="space-y-2 text-lg">
+          <div className="text-center mb-2 bg-gradient-to-r from-blue-900/50 to-purple-900/50 p-3 rounded-xl border border-blue-500/30">
+            <h1 className="text-2xl font-bold mb-2 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
+              🌟 太空飞船打字母 🌟
+            </h1>
+            <h2 className="text-xl mb-2 text-yellow-300">🎮 游戏说明</h2>
+            <div className="space-y-1 text-sm">
               <p className="text-blue-200">✨ 字母会从屏幕顶部掉落</p>
               <p className="text-green-200">🎯 字母一出现就可以击中，无需等待！</p>
               <p className="text-yellow-200">⚡ 连续击中可以获得连击奖励</p>
               <p className="text-red-200">💔 错过字母失去生命</p>
               <p className="text-purple-200">🚀 每100分升一级，难度增加</p>
             </div>
-            <p className="mb-4 text-yellow-400 text-lg">💡 点击右上角"选项"可以调节游戏速度</p>
+            <p className="mb-2 text-yellow-400 text-sm">💡 点击右上角"选项"可以调节游戏速度</p>
             <button
               onClick={startGame}
-              className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-6 rounded-xl text-2xl hover:from-green-600 hover:to-emerald-600 transition-all transform hover:scale-105 shadow-lg"
+              className="bg-gradient-to-r from-green-500 to-emerald-500 text-white p-3 rounded-xl text-lg hover:from-green-600 hover:to-emerald-600 transition-all transform hover:scale-105 shadow-lg"
             >
               🚀 开始游戏
             </button>
@@ -511,34 +510,40 @@ export default function SpaceLetterShooter() {
         )}
 
         {gameOver && (
-          <div className="text-center mb-8 bg-gradient-to-r from-red-900/50 to-pink-900/50 p-6 rounded-xl border border-red-500/30">
-            <h2 className="text-4xl mb-4 text-red-400">💥 游戏结束</h2>
-            <div className="space-y-2 text-xl">
+          <div className="text-center mb-2 bg-gradient-to-r from-red-900/50 to-pink-900/50 p-3 rounded-xl border border-red-500/30">
+            <h2 className="text-2xl mb-2 text-red-400">💥 游戏结束</h2>
+            <div className="space-y-1 text-base">
               <p className="text-yellow-300">最终得分: {score}</p>
               <p className="text-blue-300">最高分: {highScore}</p>
               <p className="text-green-300">最大连击: {maxCombo}</p>
             </div>
             <button
               onClick={restartGame}
-              className="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-6 rounded-xl text-2xl hover:from-blue-600 hover:to-purple-600 transition-all transform hover:scale-105 shadow-lg mt-4"
+              className="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-3 rounded-xl text-lg hover:from-blue-600 hover:to-purple-600 transition-all transform hover:scale-105 shadow-lg mt-2"
             >
               🔄 重新开始
             </button>
           </div>
         )}
 
-        <div className="flex justify-between mb-4 text-xl bg-gradient-to-r from-gray-800/50 to-gray-900/50 p-4 rounded-lg border border-gray-600/30">
-          <div className="text-green-400">🎯 得分: {score}</div>
-          <div className="text-yellow-400">🏆 最高分: {highScore}</div>
-          <div className="text-red-400">❤️ 生命: {'❤️'.repeat(lives)}</div>
-          <div className="text-blue-400">⭐ 等级: {level}</div>
-          <div className="text-purple-400">⚡ 连击: {combo}</div>
-          <div className="text-orange-400">📝 字母数: {letters.length}</div>
+        {(gameStarted || gameOver) && (
+          <h1 className="text-2xl font-bold mb-2 text-center bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent">
+            🌟 太空飞船打字母 🌟
+          </h1>
+        )}
+
+        <div className="flex justify-between mb-2 text-sm bg-gradient-to-r from-gray-800/50 to-gray-900/50 p-2 rounded-lg border border-gray-600/30 flex-wrap gap-1">
+          <div className="text-green-400">🎯 {score}</div>
+          <div className="text-yellow-400">🏆 {highScore}</div>
+          <div className="text-red-400">❤️ {lives}</div>
+          <div className="text-blue-400">⭐ {level}</div>
+          <div className="text-purple-400">⚡ {combo}</div>
+          <div className="text-orange-400">📝 {letters.length}</div>
         </div>
 
         <div 
           ref={gameAreaRef}
-          className="relative w-full h-96 bg-gradient-to-b from-blue-900 via-purple-900 to-black border-2 border-blue-500 rounded-xl overflow-hidden shadow-2xl"
+          className="relative w-full flex-1 min-h-0 bg-gradient-to-b from-blue-900 via-purple-900 to-black border-2 border-blue-500 rounded-xl overflow-hidden shadow-2xl"
           style={{
             backgroundImage: `
               radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
@@ -611,15 +616,15 @@ export default function SpaceLetterShooter() {
         </div>
 
         {gameStarted && !gameOver && (
-          <div className="text-center mt-4 bg-gradient-to-r from-gray-800/30 to-gray-900/30 p-4 rounded-lg border border-gray-600/30">
-            <p className="text-lg text-gray-200">
+          <div className="text-center mt-1 bg-gradient-to-r from-gray-800/30 to-gray-900/30 p-2 rounded-lg border border-gray-600/30">
+            <p className="text-sm text-gray-200">
               ⌨️ 按键盘上的字母键来射击掉落的字母！
             </p>
-            <p className="text-sm text-gray-400 mt-2">
+            <p className="text-xs text-gray-400 mt-1">
               🚀 当前速度: {speedMultiplier}x | ⏱️ 生成间隔: {spawnRate}ms
             </p>
             {combo > 0 && (
-              <p className="text-lg text-purple-300 mt-2 animate-pulse">
+              <p className="text-sm text-purple-300 mt-1 animate-pulse">
                 ⚡ 连击: {combo} | 最大连击: {maxCombo}
               </p>
             )}
