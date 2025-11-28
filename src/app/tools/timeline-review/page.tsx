@@ -2242,7 +2242,8 @@ export default function TimelineReview() {
       yearSummaries,
       verticalAnnotations,
       startYear,
-      endYear
+      endYear,
+      yearHeights
     };
     
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -2267,6 +2268,7 @@ export default function TimelineReview() {
         setVerticalAnnotations(data.verticalAnnotations || []);
         if (data.startYear) setStartYear(data.startYear);
         if (data.endYear) setEndYear(data.endYear);
+        if (data.yearHeights) setYearHeights(data.yearHeights);
         saveHistory();
       } catch (e) {
         await showAlert('导入失败', '文件格式错误，请检查文件内容');
