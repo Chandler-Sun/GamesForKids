@@ -10,6 +10,7 @@ const GamesDirectory = () => {
     tools: [
       { id: 'chinese-calligraphy', title: '文字转图片', description: '将文字转换为书法字体图片' },
       { id: 'timeline-review', title: '时间线复盘工具', description: '基于年度时间线的可视化复盘工具，支持AI分析' },
+      { id: 'transfer-school-check', title: '转学判断检查单', description: '家长自查是否有必要给孩子转学的自评问卷，填写后获得量化得分与建议' },
       { id: 'ai-test', title: 'AI 服务测试', description: '测试 OpenRouter AI 服务是否正常工作' },
     ]
   };

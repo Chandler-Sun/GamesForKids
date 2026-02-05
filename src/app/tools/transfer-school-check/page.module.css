@@ -1,0 +1,573 @@
+/* Typeform-like 清新布局 */
+.container {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #f0f9ff 0%, #e0f2fe 30%, #f8fafc 100%);
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+.progressWrap {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: rgba(0, 0, 0, 0.06);
+  z-index: 10;
+}
+
+.progressBar {
+  height: 100%;
+  background: linear-gradient(90deg, #0ea5e9, #06b6d4);
+  border-radius: 0 2px 2px 0;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 3rem 0 4rem;
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.slideEnter {
+  animation: slideIn 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.slideExit {
+  animation: slideOut 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+}
+
+.sectionLabel {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #0ea5e9;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+}
+
+.questionTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.35;
+  margin-bottom: 0.5rem;
+}
+
+.questionHint {
+  font-size: 0.9375rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin-bottom: 2rem;
+}
+
+/* 选项按钮组 */
+.optionsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.optionBtn {
+  padding: 0.875rem 1.25rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #334155;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.optionBtn:hover {
+  border-color: #0ea5e9;
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+.optionBtn.selected {
+  border-color: #0ea5e9;
+  background: #0ea5e9;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.35);
+}
+
+/* 三选一 是/否/不确定 */
+.optionTriple {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.optionTriple .optionBtn {
+  min-width: 100px;
+}
+
+/* 卡片式题目块（一组多题） */
+.cardBlock {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.cardBlockTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.cardBlockOptions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.cardBlockOptions .optionBtn {
+  padding: 0.6rem 1rem;
+  font-size: 0.9375rem;
+}
+
+/* A/B 维度表格 */
+.dimensionTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.dimensionTable th,
+.dimensionTable td {
+  padding: 0.875rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.dimensionTable th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #475569;
+}
+
+.dimensionTable tr:last-child td {
+  border-bottom: none;
+}
+
+.dimensionTable tr:hover td {
+  background: #f8fafc;
+}
+
+.dimensionTable .dimensionName {
+  font-weight: 500;
+  color: #0f172a;
+}
+
+.dimensionTable .abCell {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.abOption {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  border-radius: 8px;
+  border: 2px solid #e2e8f0;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.abOption:hover {
+  border-color: #0ea5e9;
+  background: #f0f9ff;
+}
+
+.abOption.selectedA {
+  border-color: #10b981;
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.abOption.selectedB {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  color: #b45309;
+}
+
+/* 单选列表 */
+.radioList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.radioItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: #fff;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.radioItem:hover {
+  border-color: #0ea5e9;
+  background: #f0f9ff;
+}
+
+.radioItem.selected {
+  border-color: #0ea5e9;
+  background: #f0f9ff;
+  box-shadow: 0 0 0 1px #0ea5e9;
+}
+
+.radioDot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  flex-shrink: 0;
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.radioItem.selected .radioDot {
+  border-color: #0ea5e9;
+  background: #0ea5e9;
+}
+
+.radioItem.selected .radioDot::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: #fff;
+  border-radius: 50%;
+}
+
+.radioLabel {
+  font-size: 1rem;
+  color: #334155;
+  line-height: 1.45;
+}
+
+/* 填空 */
+.textareaWrap {
+  margin-top: 0.5rem;
+}
+
+.textareaWrap textarea {
+  width: 100%;
+  min-height: 100px;
+  padding: 1rem;
+  font-size: 1rem;
+  line-height: 1.5;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  resize: vertical;
+  transition: border-color 0.2s ease;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.textareaWrap textarea:focus {
+  outline: none;
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+}
+
+.textareaWrap textarea::placeholder {
+  color: #94a3b8;
+}
+
+/* 导航按钮 */
+.navRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.navBtn {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.navBtnPrev {
+  background: transparent;
+  color: #64748b;
+}
+
+.navBtnPrev:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+.navBtnNext {
+  background: #0ea5e9;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.35);
+}
+
+.navBtnNext:hover {
+  background: #0284c7;
+  transform: translateY(-1px);
+}
+
+.navBtnNext:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 欢迎页 */
+.welcomeTitle {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.25;
+  margin-bottom: 1rem;
+}
+
+.welcomeDesc {
+  font-size: 1.0625rem;
+  color: #475569;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.welcomeStart {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  background: #0ea5e9;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.4);
+}
+
+.welcomeStart:hover {
+  background: #0284c7;
+  transform: translateY(-2px);
+}
+
+/* 结果页 */
+.resultSlide {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+}
+
+.resultTitle {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+}
+
+.resultSubtitle {
+  font-size: 1rem;
+  color: #64748b;
+  margin-bottom: 2rem;
+}
+
+.scoreCard {
+  background: #fff;
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.scoreTotalWrap {
+  text-align: center;
+  padding: 1.5rem 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.scoreTotalLabel {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+}
+
+.scoreTotalValue {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #0ea5e9;
+  line-height: 1.2;
+}
+
+.scoreTotalMax {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.scoreBars {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.scoreBarRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.scoreBarLabel {
+  width: 100px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+  flex-shrink: 0;
+}
+
+.scoreBarTrack {
+  flex: 1;
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.scoreBarFill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.6s ease;
+}
+
+.scoreBarFill.core { background: linear-gradient(90deg, #0ea5e9, #06b6d4); }
+.scoreBarFill.child { background: linear-gradient(90deg, #10b981, #34d399); }
+.scoreBarFill.family { background: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+
+.scoreBarValue {
+  width: 2rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  text-align: right;
+}
+
+.verdictCard {
+  background: #fff;
+  border-radius: 16px;
+  padding: 1.75rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid #0ea5e9;
+}
+
+.verdictCard.warning {
+  border-left-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.verdictCard.danger {
+  border-left-color: #ef4444;
+  background: #fef2f2;
+}
+
+.verdictCard.success {
+  border-left-color: #10b981;
+  background: #f0fdf4;
+}
+
+.verdictTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+}
+
+.verdictText {
+  font-size: 0.9375rem;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.quickConclusionWarning {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-top: 1rem;
+  font-size: 0.9375rem;
+  color: #b91c1c;
+  line-height: 1.5;
+}
+
+.resultRestart {
+  display: inline-block;
+  margin-top: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #0ea5e9;
+  background: #f0f9ff;
+  border: 2px solid #0ea5e9;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.resultRestart:hover {
+  background: #0ea5e9;
+  color: #fff;
+}
