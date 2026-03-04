@@ -151,24 +151,32 @@ export function computeSchedule(
   return result;
 }
 
-/** 按依赖拓扑排序（无依赖或依赖已处理的在前面） */
+/** 按依赖拓扑排序（无依赖或依赖已处理的在前面），对异常依赖做容错，避免递归栈溢出 */
 function topologicalSort(tasks: Task[]): Task[] {
   const byId = new Map<number, Task>();
   tasks.forEach((t) => byId.set(t.id, t));
   const result: Task[] = [];
-  const added = new Set<number>();
+  const visited = new Set<number>();
+  const visiting = new Set<number>();
 
-  function add(task: Task) {
-    if (added.has(task.id)) return;
-    for (const depId of task.dependsOn) {
-      const dep = byId.get(depId);
-      if (dep && !added.has(dep.id)) add(dep);
+  function visit(task: Task) {
+    if (visited.has(task.id)) return;
+    if (visiting.has(task.id)) {
+      // 检测到循环依赖或异常引用时，中止本支递归，后续按已有顺序处理剩余任务
+      return;
     }
-    added.add(task.id);
+    visiting.add(task.id);
+    for (const depId of task.dependsOn) {
+      if (depId === task.id) continue; // 忽略自依赖
+      const dep = byId.get(depId);
+      if (dep) visit(dep);
+    }
+    visiting.delete(task.id);
+    visited.add(task.id);
     result.push(task);
   }
 
-  tasks.forEach(add);
+  tasks.forEach(visit);
   return result;
 }
 
