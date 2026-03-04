@@ -192,6 +192,43 @@ ${eventsDescription}
       throw new Error(`时间线分析失败: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
+
+  /**
+   * 根据用户的一句话修改需求，调整项目排期计划文本（类 Markdown 格式），返回调整后的完整文本。
+   */
+  async adjustSchedulePlan(currentMarkdown: string, userRequest: string): Promise<string> {
+    const systemPrompt = `你是一个项目排期助手。用户会提供一段「项目排期」的类 Markdown 文本，以及一句修改需求。请只输出调整后的完整排期文本，不要解释说明。
+
+排期文本格式规则：
+- 每个任务以 "- " 开头（注意横杠后有一个空格）
+- 任务名称前的感叹号表示优先级：无=普通，一个 ! =低，!! =高，!!! =极高
+- 前置依赖用 "-->#数字" 表示，如 "-->#1" 表示依赖第 1 号任务
+- 预计耗时天数："[数字d]"，如 "[3d]" 表示 3 天；"[0.5d]" 表示半天
+- 预计人天："[数字md]"，如 "[5md]" 表示 5 人天
+- 角色/参与方：用 "@xxx" 表示
+- 备注：行内用 "> 备注内容"；多行备注在下一行用空格缩进后 "> 备注内容"
+
+请严格保持上述格式，只输出修改后的完整文本。`;
+
+    const userPrompt = `当前排期计划：\n\n${currentMarkdown}\n\n用户的修改需求：${userRequest}\n\n请直接输出修改后的完整排期文本（不要包含任何解释或前后缀）：`;
+
+    const messages: OpenRouterMessage[] = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ];
+
+    const response = await this.chatCompletion({
+      messages,
+      temperature: 0.3,
+      max_tokens: 40000,
+    });
+
+    const content = response.choices[0]?.message?.content?.trim() ?? '';
+    if (!content) {
+      throw new Error('AI 返回了空的排期文本');
+    }
+    return content;
+  }
 }
 
 // 导出默认实例
