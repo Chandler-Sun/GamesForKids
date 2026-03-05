@@ -86,14 +86,18 @@ const ROLE_COLORS = [
 ];
 
 const STORAGE_KEY_SCHEDULE = 'project-schedule-text';
+const STORAGE_KEY_AI_REQUEST = 'project-schedule-ai-request';
 
 export default function ProjectSchedulePage() {
   const [rawText, setRawText] = useState(DEFAULT_TEXT);
+  const [aiRequest, setAiRequest] = useState('');
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY_SCHEDULE);
     if (saved) setRawText(saved);
+    const savedAi = localStorage.getItem(STORAGE_KEY_AI_REQUEST);
+    if (savedAi != null) setAiRequest(savedAi);
     setHydrated(true);
   }, []);
 
@@ -102,12 +106,18 @@ export default function ProjectSchedulePage() {
     localStorage.setItem(STORAGE_KEY_SCHEDULE, rawText);
   }, [rawText, hydrated]);
 
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem(STORAGE_KEY_AI_REQUEST, aiRequest);
+  }, [aiRequest, hydrated]);
+
   const [projectStartStr, setProjectStartStr] = useState(() => {
     const d = new Date();
     return formatDate(d);
   });
   const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
-  const [aiRequest, setAiRequest] = useState('');
+  /** 显示备注：不勾选时备注为 (?) tooltip；勾选时在任务名称下方另起一行显示 */
+  const [showNotesInline, setShowNotesInline] = useState(false);
   const [aiPreview, setAiPreview] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   /** 任务名列宽度（px），可拖动分割线调整 */
@@ -304,26 +314,6 @@ export default function ProjectSchedulePage() {
 
   return (
     <div className={styles.container}>
-      <header className={styles.header}>
-        <label className={styles.headerLabel}>
-          项目开始日期：
-          <input
-            type="date"
-            className={styles.dateInput}
-            value={projectStartStr}
-            onChange={(e) => setProjectStartStr(e.target.value)}
-          />
-        </label>
-        <div className={styles.actions}>
-          <button type="button" className={styles.btn} onClick={handleExportImage}>
-            导出图片
-          </button>
-          <button type="button" className={styles.btn} onClick={handleExportExcel}>
-            导出 Excel
-          </button>
-        </div>
-      </header>
-
       <div className={styles.main}>
         <div className={styles.editorWrap}>
           <div className={styles.editorLabel}>排期文本（类 Markdown，实时渲染；! / !! / !!! 可放在任务最前表示优先级）</div>
@@ -357,7 +347,33 @@ export default function ProjectSchedulePage() {
             </div>
           </div>
         </div>
-
+        <div className={styles.header}>
+            <label className={styles.headerLabel}>
+                项目开始日期：
+                <input
+                type="date"
+                className={styles.dateInput}
+                value={projectStartStr}
+                onChange={(e) => setProjectStartStr(e.target.value)}
+                />
+            </label>
+            <label className={styles.headerCheckbox}>
+              <input
+                type="checkbox"
+                checked={showNotesInline}
+                onChange={(e) => setShowNotesInline(e.target.checked)}
+              />
+              显示备注
+            </label>
+            <div className={styles.actions}>
+                <button type="button" className={styles.btn} onClick={handleExportImage}>
+                导出图片
+                </button>
+                <button type="button" className={styles.btn} onClick={handleExportExcel}>
+                导出 Excel
+                </button>
+            </div>
+        </div>
         <div  ref={previewRef} className={styles.ganttWrap}>
           <div className={styles.ganttPreviewContent}>
             <div className={styles.ganttTitle}>甘特图预览</div>
@@ -447,58 +463,63 @@ export default function ProjectSchedulePage() {
                       style={{ gridRow: i + 3, borderBottom: '1px solid #f1f5f9' }}
                     >
                         <div className={styles.taskInfo}>
-                          <span className={styles.taskId}>#{task.id}</span>
-                          <span className={styles.taskName}>{task.name}</span>
-                          {task.priority !== 'normal' && (
-                            <span className={`${styles.priorityTag} ${PRIORITY_CLASS[task.priority]}`}>
-                              {PRIORITY_LABEL[task.priority]}
-                            </span>
-                          )}
-                          {task.roles.length > 0 && (
-                            <>
-                              {task.roles.map((r) => (
-                                <span
-                                  key={r}
-                                  className={styles.roleTag}
-                                  title={r}
-                                  style={{
-                                    backgroundColor: roleToColor.get(r),
-                                    color: '#fff',
-                                  }}
-                                >
-                                  @{r}
-                                </span>
-                              ))}
-                            </>
-                          )}
-                          {(task.durationDays != null || task.personDays != null) && (
-                            <span className={styles.durationPills} title={[task.durationDays != null && `预计 ${task.durationDays} 天`, task.personDays != null && `预计 ${task.personDays} 人天`].filter(Boolean).join(' · ')}>
-                              {task.durationDays != null && <span className={styles.durationPill}>{task.durationDays}d</span>}
-                              {task.personDays != null && <span className={styles.durationPill}>{task.personDays}md</span>}
-                            </span>
-                          )}
-                          {task.dependsOn.length > 0 && (
-                            <span
-                              className={styles.depTag}
-                              title={task.dependsOn.map((id) => `#${id} ${idToName.get(id) ?? ''}`).join('\n')}
-                              onMouseEnter={(e) => {
-                                const names = task.dependsOn.map((id) => `#${id} ${idToName.get(id) ?? ''}`).join('；');
-                                setTooltip({ text: `依赖: ${names}`, x: e.clientX, y: e.clientY });
-                              }}
-                              onMouseLeave={() => setTooltip(null)}
-                            >
-                              依赖 {task.dependsOn.map((id) => `#${id}`).join(', ')}
-                            </span>
-                          )}
-                          {task.notes.trim() !== '' && (
-                            <span
-                              className={styles.notesTrigger}
-                              aria-label="备注"
-                              onMouseEnter={(e) => setTooltip({ text: task.notes.trim(), x: e.clientX, y: e.clientY })}
-                              onMouseLeave={() => setTooltip(null)}
-                            >
-                              ?
-                            </span>
+                          <div className={styles.taskInfoLine}>
+                            <span className={styles.taskId}>#{task.id}</span>
+                            <span className={styles.taskName}>{task.name}</span>
+                            {task.priority !== 'normal' && (
+                              <span className={`${styles.priorityTag} ${PRIORITY_CLASS[task.priority]}`}>
+                                {PRIORITY_LABEL[task.priority]}
+                              </span>
+                            )}
+                            {task.roles.length > 0 && (
+                              <>
+                                {task.roles.map((r) => (
+                                  <span
+                                    key={r}
+                                    className={styles.roleTag}
+                                    title={r}
+                                    style={{
+                                      backgroundColor: roleToColor.get(r),
+                                      color: '#fff',
+                                    }}
+                                  >
+                                    @{r}
+                                  </span>
+                                ))}
+                              </>
+                            )}
+                            {(task.durationDays != null || task.personDays != null) && (
+                              <span className={styles.durationPills} title={[task.durationDays != null && `预计 ${task.durationDays} 天`, task.personDays != null && `预计 ${task.personDays} 人天`].filter(Boolean).join(' · ')}>
+                                {task.durationDays != null && <span className={styles.durationPill}>{task.durationDays}d</span>}
+                                {task.personDays != null && <span className={styles.durationPill}>{task.personDays}md</span>}
+                              </span>
+                            )}
+                            {task.dependsOn.length > 0 && (
+                              <span
+                                className={styles.depTag}
+                                title={task.dependsOn.map((id) => `#${id} ${idToName.get(id) ?? ''}`).join('\n')}
+                                onMouseEnter={(e) => {
+                                  const names = task.dependsOn.map((id) => `#${id} ${idToName.get(id) ?? ''}`).join('；');
+                                  setTooltip({ text: `依赖: ${names}`, x: e.clientX, y: e.clientY });
+                                }}
+                                onMouseLeave={() => setTooltip(null)}
+                              >
+                                依赖 {task.dependsOn.map((id) => `#${id}`).join(', ')}
+                              </span>
+                            )}
+                            {task.notes.trim() !== '' && !showNotesInline && (
+                              <span
+                                className={styles.notesTrigger}
+                                aria-label="备注"
+                                onMouseEnter={(e) => setTooltip({ text: task.notes.trim(), x: e.clientX, y: e.clientY })}
+                                onMouseLeave={() => setTooltip(null)}
+                              >
+                                ?
+                              </span>
+                            )}
+                          </div>
+                          {showNotesInline && task.notes.trim() !== '' && (
+                            <div className={styles.taskNotesInline}>{task.notes.trim()}</div>
                           )}
                         </div>
                     </div>,
