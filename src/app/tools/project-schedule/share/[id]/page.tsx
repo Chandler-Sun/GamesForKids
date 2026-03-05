@@ -176,12 +176,28 @@ export default function ProjectScheduleSharePage() {
   }, [scheduledTasks]);
 
   const leftPercent = useCallback(
-    (d: Date) => ((d.getTime() - rangeStart.getTime()) / rangeMs) * 100,
-    [rangeStart, rangeMs]
+    (d: Date) => {
+      if (!weeks.length) return 0;
+      const firstWeekStart = getWeekStart(weeks[0]);
+      const msPerDay = 86400000;
+      const diffDays = Math.floor((d.getTime() - firstWeekStart.getTime()) / msPerDay);
+      let weekIndex = Math.floor(diffDays / 7);
+      let dayInWeek = diffDays - weekIndex * 7;
+      weekIndex = Math.min(Math.max(0, weekIndex), weeks.length - 1);
+      dayInWeek = Math.min(Math.max(0, dayInWeek), 6);
+      const unit = weekIndex + dayInWeek / 7;
+      return (unit / weeks.length) * 100;
+    },
+    [weeks]
   );
   const widthPercent = useCallback(
-    (start: Date, end: Date) => Math.max(0, ((end.getTime() - start.getTime()) / rangeMs) * 100),
-    [rangeMs]
+    (start: Date, end: Date) => {
+      if (!weeks.length) return 0;
+      const msPerDay = 86400000;
+      const days = Math.max(1, Math.round((end.getTime() - start.getTime()) / msPerDay) + 1);
+      return (days / (weeks.length * 7)) * 100;
+    },
+    [weeks]
   );
 
   const onDividerMouseDown = useCallback((e: React.MouseEvent) => {
