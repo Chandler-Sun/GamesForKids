@@ -430,6 +430,7 @@
 
 .aiInputRow {
   display: flex;
+  align-items: flex-start;
   gap: 0.5rem;
   margin-bottom: 0.75rem;
 }
@@ -440,6 +441,13 @@
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   font-size: 0.875rem;
+}
+
+.aiTextarea {
+  min-height: 4.5rem;
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.5;
 }
 
 .previewModal {

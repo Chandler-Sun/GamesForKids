@@ -338,13 +338,13 @@ export default function ProjectSchedulePage() {
           <div className={styles.aiSection}>
             <div className={styles.editorLabel}>AI 调整计划</div>
             <div className={styles.aiInputRow}>
-              <input
-                type="text"
-                className={styles.aiInput}
-                placeholder="输入修改需求，如：把「开发测试环境准备」改为 2 天"
+              <textarea
+                className={`${styles.aiInput} ${styles.aiTextarea}`}
+                placeholder="输入修改需求，如：把「开发测试环境准备」改为 2 天（支持多行，Ctrl+Enter 提交）"
                 value={aiRequest}
                 onChange={(e) => setAiRequest(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAiAdjust()}
+                onKeyDown={(e) => e.key === 'Enter' && (e.ctrlKey || e.metaKey) && handleAiAdjust()}
+                rows={3}
               />
               <button
                 type="button"
