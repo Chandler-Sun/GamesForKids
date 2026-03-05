@@ -6,22 +6,9 @@ import aiService from '@/lib/services/ai_service';
 export default function AITestPage() {
   const [testResult, setTestResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [apiKeyConfigured, setApiKeyConfigured] = useState(false);
 
-  // 检查 API Key 是否配置
-  const checkApiKey = () => {
-    const hasKey = !!process.env.NEXT_PUBLIC_OPENROUTER_API_KEY;
-    setApiKeyConfigured(hasKey);
-    return hasKey;
-  };
-
-  // 测试基础聊天
+  // 测试基础聊天（通过后端 /api/ai 调用，密钥不暴露在前端）
   const testBasicChat = async () => {
-    if (!checkApiKey()) {
-      setTestResult('❌ 错误：未配置 NEXT_PUBLIC_OPENROUTER_API_KEY\n\n请在 .env.local 文件中配置 API Key');
-      return;
-    }
-
     setIsLoading(true);
     setTestResult('🔄 正在测试基础聊天功能...');
 
@@ -40,7 +27,8 @@ export default function AITestPage() {
       const content = response.choices[0].message.content;
       setTestResult(`✅ 测试成功！\n\nAI 回复：\n${content}`);
     } catch (error) {
-      setTestResult(`❌ 测试失败：\n${error instanceof Error ? error.message : String(error)}\n\n请检查：\n1. API Key 是否正确\n2. 网络连接是否正常\n3. 账户余额是否充足`);
+      const msg = error instanceof Error ? error.message : String(error);
+      setTestResult(`❌ 测试失败：\n${msg}\n\n若提示「AI 服务未配置」，请在服务端 .env.local 中配置 OPENROUTER_API_KEY。`);
     } finally {
       setIsLoading(false);
     }
@@ -48,11 +36,6 @@ export default function AITestPage() {
 
   // 测试时间线分析
   const testTimelineAnalysis = async () => {
-    if (!checkApiKey()) {
-      setTestResult('❌ 错误：未配置 NEXT_PUBLIC_OPENROUTER_API_KEY\n\n请在 .env.local 文件中配置 API Key');
-      return;
-    }
-
     setIsLoading(true);
     setTestResult('🔄 正在测试时间线分析功能...');
 
@@ -112,7 +95,8 @@ export default function AITestPage() {
 
       setTestResult(`✅ 测试成功！\n\n时间线分析结果：\n\n${insights}`);
     } catch (error) {
-      setTestResult(`❌ 测试失败：\n${error instanceof Error ? error.message : String(error)}\n\n请检查：\n1. API Key 是否正确\n2. 网络连接是否正常\n3. 账户余额是否充足`);
+      const msg = error instanceof Error ? error.message : String(error);
+      setTestResult(`❌ 测试失败：\n${msg}\n\n若提示「AI 服务未配置」，请在服务端 .env.local 中配置 OPENROUTER_API_KEY。`);
     } finally {
       setIsLoading(false);
     }
@@ -127,37 +111,8 @@ export default function AITestPage() {
     }}>
       <h1 style={{ fontSize: '32px', marginBottom: '10px' }}>🧪 AI 服务测试</h1>
       <p style={{ color: '#666', marginBottom: '30px' }}>
-        测试 OpenRouter AI 服务是否正常工作
+        AI 请求通过后端 /api/ai 转发，密钥与提示词仅保存在服务端，不会暴露在前端。
       </p>
-
-      {/* 配置状态 */}
-      <div style={{
-        padding: '20px',
-        backgroundColor: apiKeyConfigured ? '#e8f5e9' : '#fff3e0',
-        borderRadius: '8px',
-        marginBottom: '30px',
-        border: `1px solid ${apiKeyConfigured ? '#4caf50' : '#ff9800'}`
-      }}>
-        <h3 style={{ margin: '0 0 10px 0' }}>
-          {apiKeyConfigured ? '✅ API Key 已配置' : '⚠️ API Key 未配置'}
-        </h3>
-        <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
-          {apiKeyConfigured 
-            ? '您已配置 NEXT_PUBLIC_OPENROUTER_API_KEY 环境变量' 
-            : '请在项目根目录创建 .env.local 文件并配置 NEXT_PUBLIC_OPENROUTER_API_KEY'}
-        </p>
-        {!apiKeyConfigured && (
-          <details style={{ marginTop: '15px', fontSize: '14px' }}>
-            <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>查看配置步骤</summary>
-            <ol style={{ marginTop: '10px', paddingLeft: '20px' }}>
-              <li>访问 <a href="https://openrouter.ai/" target="_blank" rel="noopener noreferrer">OpenRouter</a> 获取 API Key</li>
-              <li>在项目根目录创建 <code>.env.local</code> 文件</li>
-              <li>添加内容：<code>NEXT_PUBLIC_OPENROUTER_API_KEY=your_api_key_here</code></li>
-              <li>重启开发服务器</li>
-            </ol>
-          </details>
-        )}
-      </div>
 
       {/* 测试按钮 */}
       <div style={{
@@ -201,22 +156,6 @@ export default function AITestPage() {
         >
           📊 测试时间线分析
         </button>
-
-        <button
-          onClick={checkApiKey}
-          style={{
-            padding: '12px 24px',
-            fontSize: '16px',
-            backgroundColor: '#9E9E9E',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontWeight: 'bold'
-          }}
-        >
-          🔍 检查配置
-        </button>
       </div>
 
       {/* 测试结果 */}
@@ -250,14 +189,11 @@ export default function AITestPage() {
       }}>
         <h3 style={{ marginTop: 0 }}>📚 使用说明</h3>
         <ul style={{ marginBottom: 0, lineHeight: '1.8' }}>
-          <li><strong>基础聊天测试</strong>：验证 AI 服务的基本连接和响应</li>
+          <li><strong>基础聊天测试</strong>：验证后端 AI 接口是否正常</li>
           <li><strong>时间线分析测试</strong>：测试时间线复盘功能（用于 /tools/timeline-review）</li>
-          <li><strong>检查配置</strong>：验证环境变量是否正确配置</li>
         </ul>
         <p style={{ marginTop: '15px', marginBottom: 0, fontSize: '14px' }}>
-          💡 详细文档请查看：
-          <a href="/AI_SERVICE_README.md" style={{ marginLeft: '5px' }}>AI_SERVICE_README.md</a> 和
-          <a href="/ENV_SETUP.md" style={{ marginLeft: '5px' }}>ENV_SETUP.md</a>
+          💡 服务端需在 .env.local 中配置 <code>OPENROUTER_API_KEY</code>（无需 NEXT_PUBLIC_ 前缀，仅服务端使用）。
         </p>
       </div>
     </div>

@@ -5,6 +5,13 @@ import styles from './page.module.css';
 import { parseScheduleText, type Task, type Priority } from '@/lib/schedule-parser';
 import { computeSchedule, countWorkDays } from '@/lib/workday-calc';
 import aiService from '@/lib/services/ai_service';
+import {
+  serializeTask,
+  addShareRecord,
+  getShareHistory,
+  SHARE_BASE_URL,
+  type ShareRecord,
+} from '@/lib/project-schedule-share';
 
 const DEFAULT_TEXT = `- !!启动会: 明确项目目标、范围、角色、排期. [1d][5md] @所有相关人员
 - 提供接口文档-->#1 [0.5d]
@@ -92,6 +99,10 @@ export default function ProjectSchedulePage() {
   const [rawText, setRawText] = useState(DEFAULT_TEXT);
   const [aiRequest, setAiRequest] = useState('');
   const [hydrated, setHydrated] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [shareHistory, setShareHistory] = useState<ShareRecord[]>([]);
+  const [shareSuccess, setShareSuccess] = useState<string | null>(null);
+  const [shareHistoryOpen, setShareHistoryOpen] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY_SCHEDULE);
@@ -110,6 +121,10 @@ export default function ProjectSchedulePage() {
     if (!hydrated) return;
     localStorage.setItem(STORAGE_KEY_AI_REQUEST, aiRequest);
   }, [aiRequest, hydrated]);
+
+  useEffect(() => {
+    if (hydrated) setShareHistory(getShareHistory());
+  }, [hydrated]);
 
   const [projectStartStr, setProjectStartStr] = useState(() => {
     const d = new Date();
@@ -185,6 +200,59 @@ export default function ProjectSchedulePage() {
       Math.max(0, ((end.getTime() - start.getTime()) / rangeMs) * 100),
     [rangeMs]
   );
+
+  const handleShare = useCallback(async () => {
+    if (scheduledTasks.length === 0) {
+      alert('暂无任务可分享');
+      return;
+    }
+    setShareLoading(true);
+    try {
+      const payload = {
+        rawText,
+        projectStart: projectStartStr,
+        scheduledTasks: scheduledTasks.map(serializeTask),
+      };
+      const res = await fetch('/api/project-schedule/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.error || '分享失败');
+        return;
+      }
+      const shareId = data.shareId as string;
+      const url = `${SHARE_BASE_URL}/tools/project-schedule/share/${shareId}`;
+      await navigator.clipboard.writeText(url);
+      const title = rawText.split('\n')[0]?.replace(/^-\s*!*\s*/, '').slice(0, 30) || '项目计划';
+      addShareRecord({
+        shareId,
+        url,
+        title: title + (title.length >= 30 ? '…' : ''),
+        createdAt: new Date().toISOString(),
+      });
+      setShareHistory(getShareHistory());
+      setShareSuccess(url);
+      setShareHistoryOpen(true);
+      setTimeout(() => setShareSuccess(null), 3000);
+    } catch (e) {
+      alert('分享失败：' + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setShareLoading(false);
+    }
+  }, [rawText, projectStartStr, scheduledTasks]);
+
+  const copyShareLink = useCallback((url: string) => {
+    navigator.clipboard.writeText(url).then(
+      () => {
+        setShareSuccess(url);
+        setTimeout(() => setShareSuccess(null), 2000);
+      },
+      () => alert('复制失败')
+    );
+  }, []);
 
   const handleExportExcel = useCallback(() => {
     if (scheduledTasks.length === 0) {
@@ -366,11 +434,26 @@ export default function ProjectSchedulePage() {
               显示备注
             </label>
             <div className={styles.actions}>
+                <button
+                  type="button"
+                  className={`${styles.btn} ${styles.btnPrimary}`}
+                  onClick={handleShare}
+                  disabled={shareLoading || scheduledTasks.length === 0}
+                >
+                  {shareLoading ? '上传中…' : '分享并复制链接'}
+                </button>
                 <button type="button" className={styles.btn} onClick={handleExportImage}>
-                导出图片
+                  导出图片
                 </button>
                 <button type="button" className={styles.btn} onClick={handleExportExcel}>
-                导出 Excel
+                  导出 Excel
+                </button>
+                <button
+                  type="button"
+                  className={styles.btn}
+                  onClick={() => setShareHistoryOpen(true)}
+                >
+                  分享记录
                 </button>
             </div>
         </div>
@@ -581,6 +664,56 @@ export default function ProjectSchedulePage() {
           style={{ left: tooltip.x + 10, top: tooltip.y + 10 }}
         >
           {tooltip.text}
+        </div>
+      )}
+
+      {shareHistoryOpen && (
+        <div className={styles.previewModal} role="dialog" aria-label="分享记录">
+          <div className={styles.previewContent}>
+            <div className={styles.previewHeader}>分享记录</div>
+            {shareSuccess && (
+              <div className={styles.shareSuccessWrap}>
+                <div className={styles.shareSuccess}>
+                  链接已复制：<code>{shareSuccess}</code>
+                </div>
+              </div>
+            )}
+            <div className={styles.shareHistoryList}>
+              {shareHistory.length === 0 ? (
+                <p className={styles.shareHistoryEmpty}>暂无分享记录，分享后将显示在此处。</p>
+              ) : (
+                <ul className={styles.shareHistoryUl}>
+                  {shareHistory.map((r) => (
+                    <li key={r.shareId} className={styles.shareHistoryLi}>
+                      <button
+                        type="button"
+                        className={styles.btnLink}
+                        onClick={() => copyShareLink(r.url)}
+                        title={r.url}
+                      >
+                        {r.title}
+                      </button>
+                      <span className={styles.shareHistoryMeta}>
+                        {new Date(r.createdAt).toLocaleString('zh-CN', { dateStyle: 'short', timeStyle: 'short' })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div className={styles.previewActions}>
+              <button
+                type="button"
+                className={styles.btn}
+                onClick={() => {
+                  setShareHistoryOpen(false);
+                  setShareSuccess(null);
+                }}
+              >
+                关闭
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
