@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { getScheduleJson, uploadScheduleJson, deleteScheduleJson, isR2Configured } from '@/lib/r2';
 import type { SharedPlanPayload } from '@/lib/project-schedule-share';
 
+export const runtime = 'edge';
+
 export async function GET(
   _request: Request,
   { params }: { params: { shareId: string } }
