@@ -3,7 +3,7 @@
  * 用于项目计划分享 JSON 的上传与读取
  */
 
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 
 const accountId = process.env.R2_ACCOUNT_ID;
 const endpoint = process.env.R2_ENDPOINT;
@@ -62,5 +62,21 @@ export async function getScheduleJson(shareId: string): Promise<string | null> {
     return await body.transformToString();
   } catch {
     return null;
+  }
+}
+
+export async function deleteScheduleJson(shareId: string): Promise<boolean> {
+  const client = getClient();
+  if (!client) return false;
+  try {
+    await client.send(
+      new DeleteObjectCommand({
+        Bucket: bucketName,
+        Key: `${R2_PREFIX}${shareId}.json`,
+      })
+    );
+    return true;
+  } catch {
+    return false;
   }
 }

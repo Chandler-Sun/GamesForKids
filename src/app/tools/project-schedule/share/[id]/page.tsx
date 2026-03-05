@@ -1,7 +1,5 @@
 'use client';
 
-export const runtime = 'edge';
-
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
@@ -9,7 +7,7 @@ import styles from '../../page.module.css';
 import { deserializeTask } from '@/lib/project-schedule-share';
 import type { SharedPlanPayload } from '@/lib/project-schedule-share';
 import type { Task, Priority } from '@/lib/schedule-parser';
-import { countWorkDays } from '@/lib/workday-calc';
+import { countWorkDays, computeSchedule } from '@/lib/workday-calc';
 
 const PRIORITY_CLASS: Record<Priority, string> = {
   normal: styles.priorityNormal,
@@ -35,6 +33,11 @@ function formatDate(d: Date): string {
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
+}
+
+function toLocalDate(dateStr: string): Date {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, (m ?? 1) - 1, d ?? 1);
 }
 
 function getWeekStart(d: Date): Date {
@@ -86,7 +89,13 @@ export default function ProjectScheduleSharePage() {
   const [showNotesInline, setShowNotesInline] = useState(true);
   const [taskColWidth, setTaskColWidth] = useState(400);
   const [isDragging, setIsDragging] = useState(false);
+  const [projectStartStr, setProjectStartStr] = useState('');
   const dragStartRef = useRef<{ x: number; w: number } | null>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (data?.projectStart) setProjectStartStr(data.projectStart);
+  }, [data?.projectStart]);
 
   useEffect(() => {
     if (!shareId) {
@@ -110,10 +119,20 @@ export default function ProjectScheduleSharePage() {
       .finally(() => setLoading(false));
   }, [shareId]);
 
-  const scheduledTasks = useMemo(() => {
+  const baseTasks = useMemo(() => {
     if (!data?.scheduledTasks?.length) return [];
-    return data.scheduledTasks.map(deserializeTask);
+    return data.scheduledTasks.map(deserializeTask).map(({ computedStart, computedEnd, ...t }) => t as Task);
   }, [data]);
+
+  const projectStart = useMemo(
+    () => (projectStartStr ? toLocalDate(projectStartStr) : new Date()),
+    [projectStartStr]
+  );
+
+  const scheduledTasks = useMemo(() => {
+    if (!baseTasks.length || !projectStartStr) return [];
+    return computeSchedule(baseTasks, projectStart);
+  }, [baseTasks, projectStart]);
 
   const idToName = useMemo(() => {
     const m = new Map<number, string>();
@@ -195,6 +214,71 @@ export default function ProjectScheduleSharePage() {
     };
   }, [isDragging]);
 
+  const handleExportExcel = useCallback(() => {
+    if (scheduledTasks.length === 0) {
+      alert('暂无任务可导出');
+      return;
+    }
+    import('xlsx').then((XLSX) => {
+      const headers = [
+        '序号',
+        '任务名称',
+        '优先级',
+        '预计天数',
+        '人天',
+        '角色',
+        '依赖',
+        '备注',
+        '计划开始日',
+        '计划结束日',
+      ];
+      const rows = scheduledTasks.map((t) => [
+        t.id,
+        t.name,
+        PRIORITY_LABEL[t.priority],
+        t.durationDays ?? '',
+        t.personDays ?? '',
+        t.roles.join(', '),
+        t.dependsOn.map((id) => `#${id}`).join(', '),
+        t.notes,
+        t.computedStart ? formatDate(t.computedStart) : '',
+        t.computedEnd ? formatDate(t.computedEnd) : '',
+      ]);
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '排期');
+      const ts = new Date();
+      const name = `schedule-${formatDate(ts)}-${String(ts.getHours()).padStart(2, '0')}${String(ts.getMinutes()).padStart(2, '0')}.xlsx`;
+      XLSX.writeFile(wb, name);
+    });
+  }, [scheduledTasks]);
+
+  const handleExportImage = useCallback(() => {
+    const el = previewRef.current;
+    if (!el) return;
+    import('html2canvas').then(({ default: html2canvas }) => {
+      html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      }).then((canvas) => {
+        canvas.toBlob((blob) => {
+          if (!blob) return;
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `schedule-${formatDate(new Date())}-${String(new Date().getHours()).padStart(2, '0')}${String(new Date().getMinutes()).padStart(2, '0')}.png`;
+          a.click();
+          URL.revokeObjectURL(url);
+        }, 'image/png', 1);
+      }).catch((err) => {
+        console.error('导出图片失败', err);
+        alert('导出图片失败，请重试');
+      });
+    });
+  }, []);
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -233,7 +317,15 @@ export default function ProjectScheduleSharePage() {
     <div className={styles.container}>
       <div className={styles.main}>
         <div className={styles.header}>
-          <span className={styles.headerLabel}>分享的项目计划（只读）</span>
+          <label className={styles.headerLabel}>
+            项目开始日期：
+            <input
+              type="date"
+              className={styles.dateInput}
+              value={projectStartStr}
+              onChange={(e) => setProjectStartStr(e.target.value)}
+            />
+          </label>
           <label className={styles.headerCheckbox}>
             <input
               type="checkbox"
@@ -243,12 +335,15 @@ export default function ProjectScheduleSharePage() {
             显示备注
           </label>
           <div className={styles.actions} style={{ marginLeft: 'auto' }}>
-            <Link href="/tools/project-schedule" className={styles.btn}>
-              去编辑排期
-            </Link>
+            <button type="button" className={styles.btn} onClick={handleExportImage}>
+              导出图片
+            </button>
+            <button type="button" className={styles.btn} onClick={handleExportExcel}>
+              导出 Excel
+            </button>
           </div>
         </div>
-        <div className={styles.ganttWrap}>
+        <div ref={previewRef} className={styles.ganttWrap}>
           <div className={styles.ganttPreviewContent}>
             <div className={styles.ganttTitle}>甘特图</div>
             {scheduledTasks.length === 0 ? (

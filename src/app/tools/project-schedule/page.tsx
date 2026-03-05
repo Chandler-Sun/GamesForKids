@@ -9,6 +9,8 @@ import {
   serializeTask,
   addShareRecord,
   getShareHistory,
+  removeShareRecord,
+  updateShareRecord,
   SHARE_BASE_URL,
   type ShareRecord,
 } from '@/lib/project-schedule-share';
@@ -103,6 +105,8 @@ export default function ProjectSchedulePage() {
   const [shareHistory, setShareHistory] = useState<ShareRecord[]>([]);
   const [shareSuccess, setShareSuccess] = useState<string | null>(null);
   const [shareHistoryOpen, setShareHistoryOpen] = useState(false);
+  const [shareActionId, setShareActionId] = useState<string | null>(null);
+  const [shareActionType, setShareActionType] = useState<'update' | 'delete' | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY_SCHEDULE);
@@ -252,6 +256,72 @@ export default function ProjectSchedulePage() {
       },
       () => alert('复制失败')
     );
+  }, []);
+
+  const handleUpdateShare = useCallback(
+    async (shareId: string) => {
+      if (scheduledTasks.length === 0) {
+        alert('暂无任务可更新');
+        return;
+      }
+      setShareActionId(shareId);
+      setShareActionType('update');
+      try {
+        const payload = {
+          rawText,
+          projectStart: projectStartStr,
+          scheduledTasks: scheduledTasks.map(serializeTask),
+        };
+        const res = await fetch(`/api/project-schedule/share/${encodeURIComponent(shareId)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          alert(data.error || '更新失败');
+          return;
+        }
+        const title = rawText.split('\n')[0]?.replace(/^-\s*!*\s*/, '').slice(0, 30) || '项目计划';
+        updateShareRecord(shareId, {
+          title: title + (title.length >= 30 ? '…' : ''),
+          createdAt: new Date().toISOString(),
+        });
+        setShareHistory(getShareHistory());
+        setShareSuccess('已更新');
+        setTimeout(() => setShareSuccess(null), 2000);
+      } catch (e) {
+        alert('更新失败：' + (e instanceof Error ? e.message : String(e)));
+      } finally {
+        setShareActionId(null);
+        setShareActionType(null);
+      }
+    },
+    [rawText, projectStartStr, scheduledTasks]
+  );
+
+  const handleDeleteShare = useCallback(async (shareId: string) => {
+    if (!confirm('确定删除该分享？删除后链接将失效。')) return;
+    setShareActionId(shareId);
+    setShareActionType('delete');
+    try {
+      const res = await fetch(`/api/project-schedule/share/${encodeURIComponent(shareId)}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        alert(data.error || '删除失败');
+        return;
+      }
+      removeShareRecord(shareId);
+      setShareHistory(getShareHistory());
+      setShareSuccess(null);
+    } catch (e) {
+      alert('删除失败：' + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setShareActionId(null);
+      setShareActionType(null);
+    }
   }, []);
 
   const handleExportExcel = useCallback(() => {
@@ -695,6 +765,26 @@ export default function ProjectSchedulePage() {
                       </button>
                       <span className={styles.shareHistoryMeta}>
                         {new Date(r.createdAt).toLocaleString('zh-CN', { dateStyle: 'short', timeStyle: 'short' })}
+                      </span>
+                      <span className={styles.shareHistoryActions}>
+                        <button
+                          type="button"
+                          className={styles.btnSmall}
+                          onClick={() => handleUpdateShare(r.shareId)}
+                          disabled={shareActionId !== null || scheduledTasks.length === 0}
+                          title="用当前计划覆盖该分享"
+                        >
+                          {shareActionId === r.shareId && shareActionType === 'update' ? '更新中…' : '更新'}
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.btnSmallDanger}
+                          onClick={() => handleDeleteShare(r.shareId)}
+                          disabled={shareActionId !== null}
+                          title="删除分享，链接将失效"
+                        >
+                          {shareActionId === r.shareId && shareActionType === 'delete' ? '删除中…' : '删除'}
+                        </button>
                       </span>
                     </li>
                   ))}

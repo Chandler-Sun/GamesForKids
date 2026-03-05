@@ -139,10 +139,18 @@
 .shareHistoryLi {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 0.75rem;
   padding: 0.5rem 0;
   border-bottom: 1px solid #f1f5f9;
+}
+
+.shareHistoryLi .btnLink {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .shareHistoryLi:last-child {
@@ -153,6 +161,54 @@
   flex-shrink: 0;
   font-size: 0.75rem;
   color: #94a3b8;
+}
+
+.shareHistoryActions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 0.35rem;
+}
+
+.btnSmall {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+}
+
+.btnSmall:hover:not(:disabled) {
+  border-color: #0ea5e9;
+  color: #0369a1;
+}
+
+.btnSmall:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnSmallDanger {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid #fecaca;
+  background: #fff;
+  color: #dc2626;
+  cursor: pointer;
+}
+
+.btnSmallDanger:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #dc2626;
+}
+
+.btnSmallDanger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .btnLink {

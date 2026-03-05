@@ -48,6 +48,19 @@ export function addShareRecord(record: ShareRecord): void {
   localStorage.setItem(SHARE_HISTORY_KEY, JSON.stringify(next));
 }
 
+export function removeShareRecord(shareId: string): void {
+  const list = getShareHistory().filter((r) => r.shareId !== shareId);
+  localStorage.setItem(SHARE_HISTORY_KEY, JSON.stringify(list));
+}
+
+export function updateShareRecord(shareId: string, updates: Partial<Pick<ShareRecord, 'title' | 'createdAt'>>): void {
+  const list = getShareHistory();
+  const next = list.map((r) =>
+    r.shareId === shareId ? { ...r, ...updates } : r
+  );
+  localStorage.setItem(SHARE_HISTORY_KEY, JSON.stringify(next));
+}
+
 /** 将 Task 转为 SerializedTask（Date -> ISO 字符串） */
 export function serializeTask(t: Task): SerializedTask {
   const { computedStart, computedEnd, ...rest } = t;
